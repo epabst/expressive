@@ -3,10 +3,8 @@ package geeks.jcucumber.snl;
 import org.picocontainer.MutablePicoContainer;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.annotation.Annotation;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -22,110 +20,88 @@ public class StructuredNaturalLanguageExecuter {
   static final Level DEBUG_LEVEL = Level.INFO;
   private static final char TOKEN_START_DELIM = '{';
   private static final char TOKEN_END_DELIM = '}';
+  private final Map<List<?>,List<NaturalLanguageMethod>> cachedNaturalLanguageMethodsByClasses = new HashMap<List<?>,List<NaturalLanguageMethod>>();
 
   public Object execute(String inputString, Class<? extends Annotation> annotationClass, Object objectWithAnnotations,
                         MutablePicoContainer container) {
-    RegexMethodMatch methodAndMatcher = findMatchingPatternAndMethod(
-            inputString, annotationClass, objectWithAnnotations.getClass());
-    if (methodAndMatcher == null) {
-      throw new IllegalStateException("No matching @" + annotationClass.getSimpleName()
-              + " method found for '" + inputString + "' in " + objectWithAnnotations);
+    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(annotationClass, objectWithAnnotations.getClass());
+    for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
+      NaturalLanguageMethodMatch match = naturalLanguageMethod.match(inputString);
+      if (match != null) {
+        return match.invokeMethod(objectWithAnnotations, container);
+      }
     }
-    return methodAndMatcher.invoke(objectWithAnnotations, container, this);
+    throw new IllegalStateException("No matching @" + annotationClass.getSimpleName()
+            + " method found for '" + inputString + "' in " + objectWithAnnotations);
   }
 
-  private Object invoke(Method method, Annotation annotation) {
-    return invokeWithArgs(method, annotation);
+  protected List<NaturalLanguageMethod> getNaturalLanguageMethods(Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
+    List<Class<?>> key = Arrays.asList(annotationClass, classWithAnnotations);
+    List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
+    if (naturalLanguageMethods == null) {
+      naturalLanguageMethods = findNaturalLanguageMethods(annotationClass, classWithAnnotations);
+      cachedNaturalLanguageMethodsByClasses.put(key, naturalLanguageMethods);
+    }
+    return naturalLanguageMethods;
   }
 
-  static Object invokeWithArgs(Method method, Object instance, Object... args) {
-    if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-      LOGGER.log(DEBUG_LEVEL, "invoking " + method + " on " + instance + " with args " + Arrays.asList(args));
-    }
-    try {
-      return method.invoke(instance, args);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    } catch (InvocationTargetException e) {
-      throw toIllegalStateException(e);
-    }
-  }
-
-  private static IllegalStateException toIllegalStateException(InvocationTargetException exception) {
-    if (exception.getCause() instanceof Error) {
-      throw (Error) exception.getCause();
-    }
-    else if (exception.getCause() instanceof RuntimeException) {
-      throw (RuntimeException) exception.getCause();
-    }
-    return new IllegalStateException(exception);
-  }
-
-  private RegexMethodMatch findMatchingPatternAndMethod(
-          String inputString, Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
+  private List<NaturalLanguageMethod> findNaturalLanguageMethods(Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
     List<UsesToken> tokenList = getTokens(classWithAnnotations);
-    Map<String, Method> methodByRegex = getMethodByRegexMap(annotationClass, classWithAnnotations);
-    for (Map.Entry<String,Method> regexAndMethod : methodByRegex.entrySet()) {
-      String regexWithTokens = regexAndMethod.getKey();
-      String regex = regexWithTokens;
-      Map<Integer, UsesToken> tokenByIndex = new TreeMap<Integer, UsesToken>();
-      int groupIndexInOriginal = -1;
-      //identify all of the pre-existing non-token groups 
-      while ((groupIndexInOriginal = regexWithTokens.indexOf("(", groupIndexInOriginal + 1)) >= 0) {
-        tokenByIndex.put(groupIndexInOriginal, null);
-      }
-      for (UsesToken token : tokenList) {
-        String tokenWithDelims = TOKEN_START_DELIM + token.token() + TOKEN_END_DELIM;
-        int indexInOriginal = -1;
-        while ((indexInOriginal = regexWithTokens.indexOf(tokenWithDelims, indexInOriginal + 1)) >= 0) {
-          regex = regex.replace(tokenWithDelims, '(' + token.regex() + ')');
-          tokenByIndex.put(indexInOriginal, token);
-        }
-      }
-      if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-        LOGGER.log(DEBUG_LEVEL, "Established tokenByIndex: " + tokenByIndex);
-      }
-      String regexWithoutTokens = regex;
-      Pattern pattern = Pattern.compile(regexWithoutTokens);
-      Matcher matcher = pattern.matcher(inputString);
-      if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-        LOGGER.log(DEBUG_LEVEL, "Checking " + pattern + " for match with '" + inputString + "'");
-      }
-      if (matcher.matches()) {
-        Method method = regexAndMethod.getValue();
-        return new RegexMethodMatch(method, matcher, tokenByIndex);
-      }
-    }
-    return null;
-  }
-
-  private Map<String, Method> getMethodByRegexMap(Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
-    Map<String, Method> methodByRegex = new LinkedHashMap<String, Method>();
     Method valueMethod = getValueMethod(annotationClass);
     Method[] methods = classWithAnnotations.getDeclaredMethods();
+    List<NaturalLanguageMethod> naturalLanguageMethods = new ArrayList<NaturalLanguageMethod>(methods.length);
     for (Method method : methods) {
       if (LOGGER.isLoggable(Level.FINEST)) {
         LOGGER.log(Level.FINEST, "Looking for annotation " + annotationClass.getSimpleName() + " in method: " + method);
       }
       Annotation annotation = method.getAnnotation(annotationClass);
       if (annotation != null) {
-        String regex = (String) invoke(valueMethod, annotation);
-        //todo make sure pattern not already defined
-        methodByRegex.put(regex, method);
+        String regex = (String) ReflectionUtil.invokeWithArgs(valueMethod, annotation);
+        naturalLanguageMethods.add(toNaturalLanguageMethod(method, regex, tokenList));
       }
     }
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
       LOGGER.log(DEBUG_LEVEL, "Found @" + annotationClass.getSimpleName() + " methods with regular expressions in "
-              + classWithAnnotations + ": " + methodByRegex);
+              + classWithAnnotations + ": " + naturalLanguageMethods);
     }
-    return methodByRegex;
+    return naturalLanguageMethods;
+  }
+
+  private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens, List<UsesToken> tokenList) {
+    String regex = regexWithTokens;
+    Map<Integer, UsesToken> tokenByIndex = new TreeMap<Integer, UsesToken>();
+    int groupIndexInOriginal = -1;
+    //identify all of the pre-existing non-token groups
+    while ((groupIndexInOriginal = regexWithTokens.indexOf("(", groupIndexInOriginal + 1)) >= 0) {
+      tokenByIndex.put(groupIndexInOriginal, null);
+    }
+    for (UsesToken token : tokenList) {
+      String tokenWithDelims = TOKEN_START_DELIM + token.token() + TOKEN_END_DELIM;
+      int indexInOriginal = -1;
+      while ((indexInOriginal = regexWithTokens.indexOf(tokenWithDelims, indexInOriginal + 1)) >= 0) {
+        regex = regex.replace(tokenWithDelims, '(' + token.regex() + ')');
+        tokenByIndex.put(indexInOriginal, token);
+      }
+    }
+    if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+      LOGGER.log(DEBUG_LEVEL, "Established tokenByIndex: " + tokenByIndex);
+    }
+    return new NaturalLanguageMethod(method, Pattern.compile(regex), createConverters(tokenByIndex));
+  }
+
+  List<TokenArgumentConverter> createConverters(Map<Integer, UsesToken> tokenByIndex) {
+    List<UsesToken> orderedTokensAndNulls = new ArrayList<UsesToken>(tokenByIndex.values());
+    List<TokenArgumentConverter> converters = new ArrayList<TokenArgumentConverter>(orderedTokensAndNulls.size());
+    for (UsesToken token : orderedTokensAndNulls) {
+      converters.add(new TokenArgumentConverter(token, this));
+    }
+    return converters;
   }
 
   private List<UsesToken> getTokens(Class<?> classWithAnnotations) {
     UsesTokens usesTokenAnnotation = classWithAnnotations.getAnnotation(UsesTokens.class);
     if (usesTokenAnnotation != null) {
-      UsesToken[] tokens = usesTokenAnnotation.value();
-      return Arrays.asList(tokens);
+      return Arrays.asList(usesTokenAnnotation.value());
     }
     else {
       return Collections.emptyList();
@@ -148,5 +124,4 @@ public class StructuredNaturalLanguageExecuter {
     }
     return container.getComponent(componentClass);
   }
-
 }
