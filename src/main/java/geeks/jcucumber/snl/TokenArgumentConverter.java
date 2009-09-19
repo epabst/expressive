@@ -1,8 +1,7 @@
 package geeks.jcucumber.snl;
 
-import org.picocontainer.MutablePicoContainer;
-
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * An argument converter based on a {@link UsesToken}. 
@@ -19,14 +18,13 @@ public class TokenArgumentConverter {
     this.executer = executer;
   }
 
-  Object convertArgument(String argString, Object instanceForMethod, MutablePicoContainer container) {
+  Object convertArgument(String argString) {
     Object convertedArg;
     if (token != null) {
-      if (LOGGER.isLoggable(StructuredNaturalLanguageExecuter.DEBUG_LEVEL)) {
-        LOGGER.log(StructuredNaturalLanguageExecuter.DEBUG_LEVEL, "Processing token " + token + " on string: " + argString);
+      if (LOGGER.isLoggable(Level.FINE)) {
+        LOGGER.log(Level.FINE, "Processing token " + token + " on string: " + argString);
       }
-      Object objectWithAnnotationsFromToken = getObjectWithAnnotations(token, instanceForMethod, container);
-      convertedArg = executer.execute(argString, token.annotation(), objectWithAnnotationsFromToken, container);
+      convertedArg = executer.execute(argString, token.annotation(), getClassWithAnnotations(token));
     }
     else {
       convertedArg = argString;
@@ -34,11 +32,7 @@ public class TokenArgumentConverter {
     return convertedArg;
   }
 
-  Object getObjectWithAnnotations(UsesToken token, Object defaultObjectWithAnnotations, MutablePicoContainer container) {
-    Class<?> classWithAnnotations = token.recognizer();
-    if (classWithAnnotations == Void.class) {
-      return defaultObjectWithAnnotations;
-    }
-    return StructuredNaturalLanguageExecuter.addAndGetComponent(classWithAnnotations, container);
+  private Class<?> getClassWithAnnotations(UsesToken token) {
+    return (Class<?>) token.recognizer();
   }
 }

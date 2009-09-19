@@ -21,14 +21,14 @@ import java.lang.annotation.RetentionPolicy;
 ///CLOVER:OFF
 public class TestStructuredNaturalLanguageExecuter {
   private final DefaultPicoContainer container = new DefaultPicoContainer(new ConstructorInjection());
-  private final StructuredNaturalLanguageExecuter executer = StructuredNaturalLanguageExecuter.addAndGetComponent(StructuredNaturalLanguageExecuter.class, container);
+  private final StructuredNaturalLanguageExecuter executer = new StructuredNaturalLanguageExecuter(container);
 
   @Test
   public void testParseWithoutToken() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
-    executer.execute("say \"hello\" 10 times without token", Command.class, talker, container);
+    executer.execute("say \"hello\" 10 times without token", Command.class, Talker.class);
+    Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
   }
 
@@ -36,8 +36,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithTokenAndRegex() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
-    executer.execute("say \"hello\" 10 times with token and regex", Command.class, talker, container);
+    executer.execute("say \"hello\" 10 times with token and regex", Command.class, Talker.class);
+    Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
   }
 
@@ -45,8 +45,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithRegexAndToken() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
-    executer.execute("say \"hello\" 10 times with regex and token", Command.class, talker, container);
+    executer.execute("say \"hello\" 10 times with regex and token", Command.class, Talker.class);
+    Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
   }
 
@@ -54,9 +54,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithIllegalAnnotation() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
     try {
-      executer.execute("say \"hello\" 10 times", TagAnnotation.class, talker, container);
+      executer.execute("say \"hello\" 10 times", TagAnnotation.class, Talker.class);
       fail("expected exception");
     }
     catch (IllegalStateException e) {
@@ -74,8 +73,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithToken() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
-    executer.execute("say \"hello\" 10 times", Command.class, talker, container);
+    executer.execute("say \"hello\" 10 times", Command.class, Talker.class);
+    Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
   }
 
@@ -83,8 +82,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithAlternateToken() {
     assertNotNull("executer should have been set", executer);
 
-    Talker talker = StructuredNaturalLanguageExecuter.addAndGetComponent(Talker.class, container);
-    executer.execute("say \"hi\" one time", Command.class, talker, container);
+    executer.execute("say \"hi\" one time", Command.class, Talker.class);
+    Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals("hi", talker.getResult());
   }
 

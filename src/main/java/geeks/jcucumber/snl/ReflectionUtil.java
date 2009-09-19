@@ -11,11 +11,11 @@ import java.util.logging.Level;
  *
  * @author pabstec
  */
-public class ReflectionUtil {
+class ReflectionUtil {
   private static final Logger LOGGER = Logger.getLogger(ReflectionUtil.class.getName());
   private static final Level DEBUG_LEVEL = Level.INFO;
          
-  public static Object invokeWithArgs(Method method, Object instance, Object... args) {
+  static Object invokeWithArgs(Method method, Object instance, Object... args) {
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
       LOGGER.log(DEBUG_LEVEL, "invoking " + method + " on " + instance + " with args " + Arrays.asList(args));
     }

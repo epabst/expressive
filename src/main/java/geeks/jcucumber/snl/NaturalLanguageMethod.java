@@ -2,9 +2,7 @@ package geeks.jcucumber.snl;
 
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A structured natural language method.
@@ -12,7 +10,6 @@ import java.util.logging.Logger;
 * @author pabstec
 */
 public class NaturalLanguageMethod {
-  private static final Logger LOGGER = Logger.getLogger(NaturalLanguageMethod.class.getName());
   private final Method method;
   private final Pattern pattern;
   private final List<TokenArgumentConverter> converters;
@@ -33,16 +30,5 @@ public class NaturalLanguageMethod {
 
   public List<TokenArgumentConverter> getArgumentConverters() {
     return converters;
-  }
-
-  public NaturalLanguageMethodMatch match(String inputString) {
-    if (LOGGER.isLoggable(StructuredNaturalLanguageExecuter.DEBUG_LEVEL)) {
-      LOGGER.log(StructuredNaturalLanguageExecuter.DEBUG_LEVEL, "Checking " + getPattern() + " for match with '" + inputString + "'");
-    }
-    Matcher matcher = getPattern().matcher(inputString);
-    if (matcher.matches()) {
-      return new NaturalLanguageMethodMatch(this, matcher);
-    }
-    return null;
   }
 }

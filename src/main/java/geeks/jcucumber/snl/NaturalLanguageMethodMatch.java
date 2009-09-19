@@ -1,9 +1,8 @@
 package geeks.jcucumber.snl;
 
-import org.picocontainer.MutablePicoContainer;
-
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
+import java.util.List;
 
 /**
  * A success match of a NaturalLanguageMethod to a string.
@@ -27,13 +26,13 @@ class NaturalLanguageMethodMatch {
     return matcher;
   }
 
-  Object invokeMethod(Object objectWithAnnotations, MutablePicoContainer container) {
+  Object invokeMethod(Object objectWithAnnotations) {
     Method method = getNaturalLanguageMethod().getMethod();
-    Matcher matcher = getMatcher();
+    List<TokenArgumentConverter> argumentConverters = naturalLanguageMethod.getArgumentConverters();
     Object[] args = new Object[matcher.groupCount()];
     for (int i = 0; i < matcher.groupCount(); i++) {
       String group = matcher.group(i + 1);
-      args[i] = naturalLanguageMethod.getArgumentConverters().get(i).convertArgument(group, objectWithAnnotations, container);
+      args[i] = argumentConverters.get(i).convertArgument(group);
     }
     return ReflectionUtil.invokeWithArgs(method, objectWithAnnotations, args);
   }
