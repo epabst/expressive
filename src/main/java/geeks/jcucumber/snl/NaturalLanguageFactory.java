@@ -5,7 +5,6 @@ import java.util.logging.Level;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.lang.reflect.Method;
-import java.lang.annotation.Annotation;
 
 /**
  * A factory for {@link geeks.jcucumber.snl.NaturalLanguageMethod}s.
@@ -24,27 +23,27 @@ class NaturalLanguageFactory {
     this.executer = executer;
   }
 
-  public List<NaturalLanguageMethod> getNaturalLanguageMethods(Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
-    List<Class<?>> key = Arrays.asList(annotationClass, classWithAnnotations);
+  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexIdentifier regexIdentifier, Class<?> classWithAnnotations) {
+    List<Object> key = Arrays.asList(regexIdentifier, classWithAnnotations);
     List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
     if (naturalLanguageMethods == null) {
-      naturalLanguageMethods = findNaturalLanguageMethods(annotationClass, classWithAnnotations);
+      naturalLanguageMethods = findNaturalLanguageMethods(regexIdentifier, classWithAnnotations);
       cachedNaturalLanguageMethodsByClasses.put(key, naturalLanguageMethods);
     }
     return naturalLanguageMethods;
   }
 
-  private List<NaturalLanguageMethod> findNaturalLanguageMethods(Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
+  private List<NaturalLanguageMethod> findNaturalLanguageMethods(MethodRegexIdentifier regexIdentifier, Class<?> classWithAnnotations) {
     Method[] methods = classWithAnnotations.getDeclaredMethods();
     List<NaturalLanguageMethod> naturalLanguageMethods = new ArrayList<NaturalLanguageMethod>(methods.length);
     for (Method method : methods) {
-      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, annotationClass);
+      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, regexIdentifier);
       if (naturalLanguageMethod != null) {
         naturalLanguageMethods.add(naturalLanguageMethod);
       }
     }
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-      LOGGER.log(DEBUG_LEVEL, "Found @" + annotationClass.getSimpleName() + " methods with regular expressions in "
+      LOGGER.log(DEBUG_LEVEL, "Found " + regexIdentifier + " methods with regular expressions in "
               + classWithAnnotations + ": " + naturalLanguageMethods);
     }
     return naturalLanguageMethods;
@@ -53,31 +52,18 @@ class NaturalLanguageFactory {
   /**
    * Tries to convert a method into a NaturalLanguageMethod.
    * @param method the Method
-   * @param annotationClass the Annotation that the method should have
+   * @param regexIdentifier the Annotation that the method should have
    * @return a NaturalLanguageMethod
    */
-  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, Class<? extends Annotation> annotationClass) {
+  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, MethodRegexIdentifier regexIdentifier) {
     if (LOGGER.isLoggable(Level.FINEST)) {
-      LOGGER.log(Level.FINEST, "Looking for annotation " + annotationClass.getSimpleName() + " in method: " + method);
+      LOGGER.log(Level.FINEST, "Seeing if method " + method + " matches " + regexIdentifier);
     }
-    Annotation annotation = method.getAnnotation(annotationClass);
-    NaturalLanguageMethod naturalLanguageMethod = null;
-    if (annotation != null) {
-      Method valueMethod = getValueMethod(annotationClass);
-      String regex = (String) ReflectionUtil.invokeWithArgs(valueMethod, annotation);
-      naturalLanguageMethod = toNaturalLanguageMethod(method, regex);
+    String regex = regexIdentifier.getRegex(method);
+    if (regex == null) {
+      return null;
     }
-    return naturalLanguageMethod;
-  }
-
-  private Method getValueMethod(Class<? extends Annotation> annotationClass) {
-    Method valueMethod;
-    try {
-      valueMethod = annotationClass.getMethod("value");
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException(e);
-    }
-    return valueMethod;
+    return toNaturalLanguageMethod(method, regex);
   }
 
   private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens) {
@@ -102,11 +88,11 @@ class NaturalLanguageFactory {
     return new NaturalLanguageMethod(method, Pattern.compile(regex), createConverters(tokenByIndex, executer));
   }
 
-  private List<TokenArgumentConverter> createConverters(Map<Integer, UsesToken> tokenByIndex, StructuredNaturalLanguageExecuter executer) {
+  private List<ArgumentConverter> createConverters(Map<Integer, UsesToken> tokenByIndex, StructuredNaturalLanguageExecuter executer) {
     List<UsesToken> orderedTokensAndNulls = new ArrayList<UsesToken>(tokenByIndex.values());
-    List<TokenArgumentConverter> converters = new ArrayList<TokenArgumentConverter>(orderedTokensAndNulls.size());
+    List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(orderedTokensAndNulls.size());
     for (UsesToken token : orderedTokensAndNulls) {
-      converters.add(new TokenArgumentConverter(token, executer));
+      converters.add(token != null ? new TokenArgumentConverter(token, executer) : ArgumentConverter.IDENTITY);
     }
     return converters;
   }

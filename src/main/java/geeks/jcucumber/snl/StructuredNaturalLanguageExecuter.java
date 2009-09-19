@@ -2,7 +2,7 @@ package geeks.jcucumber.snl;
 
 import org.picocontainer.MutablePicoContainer;
 
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.*;
 import java.util.logging.Logger;
@@ -25,17 +25,17 @@ public class StructuredNaturalLanguageExecuter {
     naturalLanguageFactory = new NaturalLanguageFactory(this);
   }
 
-  public Object execute(String languageString, Class<? extends Annotation> annotationClass, Class<?> classWithAnnotations) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(annotationClass, classWithAnnotations);
+  public Object execute(String languageString, MethodRegexIdentifier regexIdentifier, Class<?> matchingClass) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, matchingClass);
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       NaturalLanguageMethodMatch match = match(naturalLanguageMethod, languageString);
       if (match != null) {
-        Object objectWithAnnotationsFromToken = addAndGetComponent(classWithAnnotations);
-        return match.invokeMethod(objectWithAnnotationsFromToken);
+        Object objectToInvoke = addAndGetComponent(matchingClass);
+        return match.invokeMethod(objectToInvoke);
       }
     }
-    throw new IllegalStateException("No matching @" + annotationClass.getSimpleName()
-            + " method found for '" + languageString + "' in " + classWithAnnotations);
+    throw new IllegalStateException("No matching " + regexIdentifier
+            + " method found for '" + languageString + "' in " + matchingClass);
   }
 
   private NaturalLanguageMethodMatch match(NaturalLanguageMethod naturalLanguageMethod, String inputString) {
@@ -54,5 +54,39 @@ public class StructuredNaturalLanguageExecuter {
       container.addComponent(componentClass);
     }
     return container.getComponent(componentClass);
+  }
+
+  /**
+ * A success match of a NaturalLanguageMethod to a string.
+  *
+  * @author pabstec
+  */
+  private static class NaturalLanguageMethodMatch {
+    private final NaturalLanguageMethod naturalLanguageMethod;
+    private final Matcher matcher;
+
+    public NaturalLanguageMethodMatch(NaturalLanguageMethod naturalLanguageMethod, Matcher matcher) {
+      this.naturalLanguageMethod = naturalLanguageMethod;
+      this.matcher = matcher;
+    }
+
+    public NaturalLanguageMethod getNaturalLanguageMethod() {
+      return naturalLanguageMethod;
+    }
+
+    public Matcher getMatcher() {
+      return matcher;
+    }
+
+    Object invokeMethod(Object objectToInvoke) {
+      Method method = getNaturalLanguageMethod().getMethod();
+      List<ArgumentConverter> argumentConverters = naturalLanguageMethod.getArgumentConverters();
+      Object[] args = new Object[matcher.groupCount()];
+      for (int i = 0; i < matcher.groupCount(); i++) {
+        String group = matcher.group(i + 1);
+        args[i] = argumentConverters.get(i).convertArgument(group, naturalLanguageMethod, i);
+      }
+      return ReflectionUtil.invokeWithArgs(method, objectToInvoke, args);
+    }
   }
 }

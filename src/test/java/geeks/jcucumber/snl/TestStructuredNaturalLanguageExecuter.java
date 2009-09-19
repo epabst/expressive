@@ -27,27 +27,27 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithoutToken() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times without token", Command.class, Talker.class);
+    executer.execute("say \"hello\" 10 times without token", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
+    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
   public void testParseWithTokenAndRegex() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times with token and regex", Command.class, Talker.class);
+    executer.execute("say \"hello\" 10 times with token and regex", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
+    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
   public void testParseWithRegexAndToken() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times with regex and token", Command.class, Talker.class);
+    executer.execute("say \"hello\" 10 times with regex and token", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
+    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
@@ -55,7 +55,7 @@ public class TestStructuredNaturalLanguageExecuter {
     assertNotNull("executer should have been set", executer);
 
     try {
-      executer.execute("say \"hello\" 10 times", TagAnnotation.class, Talker.class);
+      executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(TagAnnotation.class), Talker.class);
       fail("expected exception");
     }
     catch (IllegalStateException e) {
@@ -73,18 +73,18 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithToken() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times", Command.class, Talker.class);
+    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals("hello, hello, hello, hello, hello, hello, hello, hello, hello, hello", talker.getResult());
+    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
   public void testParseWithAlternateToken() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hi\" one time", Command.class, Talker.class);
+    executer.execute("say \"hi\" one time", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals("hi", talker.getResult());
+    assertEquals(talker.getResult(), "hi");
   }
 
   @UsesTokens({

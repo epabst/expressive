@@ -12,9 +12,9 @@ import java.util.List;
 public class NaturalLanguageMethod {
   private final Method method;
   private final Pattern pattern;
-  private final List<TokenArgumentConverter> converters;
+  private final List<ArgumentConverter> converters;
 
-  public NaturalLanguageMethod(Method method, Pattern pattern, List<TokenArgumentConverter> converters) {
+  public NaturalLanguageMethod(Method method, Pattern pattern, List<ArgumentConverter> converters) {
     this.method = method;
     this.pattern = pattern;
     this.converters = converters;
@@ -28,7 +28,7 @@ public class NaturalLanguageMethod {
     return pattern;
   }
 
-  public List<TokenArgumentConverter> getArgumentConverters() {
+  public List<ArgumentConverter> getArgumentConverters() {
     return converters;
   }
 }
