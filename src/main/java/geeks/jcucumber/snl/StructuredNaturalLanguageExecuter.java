@@ -17,6 +17,7 @@ import java.util.logging.Level;
 public class StructuredNaturalLanguageExecuter {
   static final Logger LOGGER = Logger.getLogger(StructuredNaturalLanguageExecuter.class.getName());
   private final MutablePicoContainer container;
+  private final Map<Class<?>, Object> addedComponents = new HashMap<Class<?>, Object>();
   private final NaturalLanguageFactory naturalLanguageFactory;
   private static final Level DEBUG_LEVEL = Level.INFO;
 
@@ -50,10 +51,19 @@ public class StructuredNaturalLanguageExecuter {
   }
 
   <T> T addAndGetComponent(Class<T> componentClass) {
-    if (container.getComponent(componentClass) == null) {
-      container.addComponent(componentClass);
+    if (false) {
+      //todo why doesn't this work?
+      if (container.getComponent(componentClass) == null) {
+        container.addComponent(componentClass);
+      }
+      return container.getComponent(componentClass);
     }
-    return container.getComponent(componentClass);
+    if (!addedComponents.containsKey(componentClass)) {
+      container.addComponent(componentClass);
+      addedComponents.put(componentClass, container.getComponent(componentClass));
+    }
+    //noinspection unchecked
+    return (T) addedComponents.get(componentClass);
   }
 
   /**

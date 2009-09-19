@@ -37,7 +37,7 @@ public class TokenArgumentConverter implements ArgumentConverter {
 
   private Class<?> getClassWithAnnotations(NaturalLanguageMethod naturalLanguageMethod) {
     if (recognizerFromToken.equals(Void.class)) {
-      return naturalLanguageMethod.getMethod().getClass();
+      return naturalLanguageMethod.getMethod().getDeclaringClass();
     }
     return recognizerFromToken;
   }

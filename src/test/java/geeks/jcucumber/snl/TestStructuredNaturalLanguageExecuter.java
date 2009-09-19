@@ -3,6 +3,7 @@ package geeks.jcucumber.snl;
 import org.picocontainer.DefaultPicoContainer;
 import org.picocontainer.injectors.ConstructorInjection;
 import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 import static org.testng.Assert.assertTrue;
@@ -20,8 +21,12 @@ import java.lang.annotation.RetentionPolicy;
  */
 ///CLOVER:OFF
 public class TestStructuredNaturalLanguageExecuter {
-  private final DefaultPicoContainer container = new DefaultPicoContainer(new ConstructorInjection());
-  private final StructuredNaturalLanguageExecuter executer = new StructuredNaturalLanguageExecuter(container);
+  private StructuredNaturalLanguageExecuter executer;
+
+  @BeforeMethod
+  private void setup() {
+    executer = new StructuredNaturalLanguageExecuter(new DefaultPicoContainer(new ConstructorInjection()));
+  }
 
   @Test
   public void testParseWithoutToken() {
