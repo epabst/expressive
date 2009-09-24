@@ -8,15 +8,15 @@ import java.lang.reflect.Method;
  *
  * @author pabstec
  */
-class AnnotationMethodRegexIdentifier<T extends Annotation> implements MethodRegexIdentifier {
+class AnnotationMethodRegexAssociation<T extends Annotation> implements MethodRegexAssociation {
   private final Class<T> annotationClass;
   private final Method annotationValueMethod;
 
-  public static <T extends Annotation> AnnotationMethodRegexIdentifier<T> getInstance(Class<T> annotationClass) {
-    return new AnnotationMethodRegexIdentifier<T>(annotationClass);
+  public static <T extends Annotation> AnnotationMethodRegexAssociation<T> getInstance(Class<T> annotationClass) {
+    return new AnnotationMethodRegexAssociation<T>(annotationClass);
   }
 
-  private AnnotationMethodRegexIdentifier(Class<T> annotationClass) {
+  private AnnotationMethodRegexAssociation(Class<T> annotationClass) {
     this.annotationClass = annotationClass;
     annotationValueMethod = getValueMethod(annotationClass);
   }
@@ -29,7 +29,7 @@ class AnnotationMethodRegexIdentifier<T extends Annotation> implements MethodReg
     return "@" + annotationClass.getSimpleName();
   }
 
-  public String getRegex(Method method) {
+  public String findRegex(Method method) {
     Annotation annotation = method.getAnnotation(annotationClass);
     String regex = null;
     if (annotation != null) {

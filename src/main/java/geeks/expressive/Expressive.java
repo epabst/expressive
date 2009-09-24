@@ -26,13 +26,13 @@ public class Expressive {
     naturalLanguageFactory = new NaturalLanguageFactory(this);
   }
 
-  public Object execute(String languageString, MethodRegexIdentifier regexIdentifier, MethodRegexIdentifier transformMethodIdentifier, Class<?> matchingClass) {
-    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexIdentifier, transformMethodIdentifier, matchingClass);
+  public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
+    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexAssociation, transformRegexAssociation, matchingClass);
     if (match != null) {
       return invokeMethod(match, matchingClass);
     }
-    throw new IllegalStateException("No matching " + regexIdentifier
-            + " method found for '" + languageString + "' in " + matchingClass);
+    throw new IllegalStateException("No method with " + regexAssociation
+            + " found for '" + languageString + "' in " + matchingClass);
   }
 
   Object invokeMethod(NaturalLanguageMethodMatch match, Class<?> matchingClass) {
@@ -40,8 +40,8 @@ public class Expressive {
     return match.invokeMethod(objectToInvoke);
   }
 
-  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexIdentifier regexIdentifier, MethodRegexIdentifier transformMethodIdentifier, Class<?> matchingClass) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, transformMethodIdentifier, matchingClass);
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, matchingClass);
     NaturalLanguageMethodMatch match = null;
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       match = match(naturalLanguageMethod, languageString);

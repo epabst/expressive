@@ -23,12 +23,12 @@ public class TestNaturalLanguageMethod {
     Pattern pattern1 = Pattern.compile(".*");
     Pattern pattern1b = Pattern.compile(".*");
     Pattern pattern2 = Pattern.compile("\\w*");
-    NaturalLanguageMethod naturalLanguageMethod = new NaturalLanguageMethod(method1, pattern1, Arrays.<ArgumentConverter>asList());
-    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(method1, pattern1, Arrays.<ArgumentConverter>asList()));
-    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(method1, pattern1b, Arrays.<ArgumentConverter>asList()));
-    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(method1, pattern1, Arrays.<ArgumentConverter>asList(ArgumentConverter.IDENTITY)));
-    assertEquality(false, naturalLanguageMethod, new NaturalLanguageMethod(method1, pattern2, Arrays.<ArgumentConverter>asList()));
-    assertEquality(false, naturalLanguageMethod, new NaturalLanguageMethod(method2, pattern1, Arrays.<ArgumentConverter>asList()));
+    NaturalLanguageMethod naturalLanguageMethod = new NaturalLanguageMethod(pattern1, method1, Arrays.<ArgumentConverter>asList());
+    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(pattern1, method1, Arrays.<ArgumentConverter>asList()));
+    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(pattern1b, method1, Arrays.<ArgumentConverter>asList()));
+    assertEquality(true, naturalLanguageMethod, new NaturalLanguageMethod(pattern1, method1, Arrays.<ArgumentConverter>asList(ArgumentConverter.IDENTITY)));
+    assertEquality(false, naturalLanguageMethod, new NaturalLanguageMethod(pattern2, method1, Arrays.<ArgumentConverter>asList()));
+    assertEquality(false, naturalLanguageMethod, new NaturalLanguageMethod(pattern1, method2, Arrays.<ArgumentConverter>asList()));
   }
 
   private <T> void assertEquality(boolean shouldEqual, T object1, T object2) {

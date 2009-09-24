@@ -13,7 +13,7 @@ import java.util.logging.Level;
  */
 class ReflectionUtil {
   private static final Logger LOGGER = Logger.getLogger(ReflectionUtil.class.getName());
-  private static final Level DEBUG_LEVEL = Level.INFO;
+  private static final Level DEBUG_LEVEL = Level.FINE;
          
   static Object invokeWithArgs(Method method, Object instance, Object... args) {
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {

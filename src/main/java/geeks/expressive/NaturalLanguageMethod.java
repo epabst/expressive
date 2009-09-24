@@ -10,22 +10,22 @@ import java.util.List;
 * @author pabstec
 */
 public class NaturalLanguageMethod {
-  private final Method method;
   private final Pattern pattern;
+  private final Method method;
   private final List<ArgumentConverter> converters;
 
-  public NaturalLanguageMethod(Method method, Pattern pattern, List<ArgumentConverter> converters) {
-    this.method = method;
+  public NaturalLanguageMethod(Pattern pattern, Method method, List<ArgumentConverter> converters) {
     this.pattern = pattern;
+    this.method = method;
     this.converters = converters;
-  }
-
-  public Method getMethod() {
-    return method;
   }
 
   public Pattern getPattern() {
     return pattern;
+  }
+
+  public Method getMethod() {
+    return method;
   }
 
   public List<ArgumentConverter> getArgumentConverters() {
@@ -38,21 +38,21 @@ public class NaturalLanguageMethod {
     if (o == null || getClass() != o.getClass()) return false;
 
     NaturalLanguageMethod that = (NaturalLanguageMethod) o;
-    return method.equals(that.method) && pattern.pattern().equals(that.pattern.pattern());
+    return pattern.pattern().equals(that.pattern.pattern()) && method.equals(that.method);
   }
 
   @Override
   public int hashCode() {
-    int result = method.hashCode();
-    result = 31 * result + pattern.pattern().hashCode();
+    int result = pattern.pattern().hashCode();
+    result = 31 * result + method.hashCode();
     return result;
   }
 
   @Override
   public String toString() {
     return "NaturalLanguageMethod{" +
-            "method=" + method +
-            ", pattern=" + pattern +
+            "pattern=" + pattern +
+            ", method=" + method +
             ", converters=" + converters +
             '}';
   }
