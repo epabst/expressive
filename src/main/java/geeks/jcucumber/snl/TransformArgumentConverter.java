@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.lang.reflect.Method;
 
 /**
- * An argument converter using {@link Transform} methods. 
+ * An argument converter using methods matching a {@link MethodRegexIdentifier}.
  *
  * @author pabstec
  */
@@ -14,13 +14,12 @@ class TransformArgumentConverter implements ArgumentConverter {
   private final StructuredNaturalLanguageExecuter executer;
   private final MethodRegexIdentifier methodIdentifier;
 
-  public TransformArgumentConverter(final Class<?> targetType, StructuredNaturalLanguageExecuter executer) {
+  public TransformArgumentConverter(final Class<?> targetType, StructuredNaturalLanguageExecuter executer, final MethodRegexIdentifier transformMethodIdentifier) {
     this.executer = executer;
-    final AnnotationMethodRegexIdentifier<Transform> annotationMethodRegexIdentifier = AnnotationMethodRegexIdentifier.getInstance(Transform.class);
     this.methodIdentifier = new MethodRegexIdentifier() {
       public String getRegex(Method method) {
         if (targetType.isAssignableFrom(method.getReturnType())) {
-          return annotationMethodRegexIdentifier.getRegex(method);
+          return transformMethodIdentifier.getRegex(method);
         } else {
           //if the type doesn't match then don't use the Transform
           return null;
@@ -29,10 +28,19 @@ class TransformArgumentConverter implements ArgumentConverter {
     };
   }
 
-  public Object convertArgument(String argString, NaturalLanguageMethod naturalLanguageMethod, int index) {
+  public Object convertArgument(String argString, final NaturalLanguageMethod naturalLanguageMethod, int index) {
     Class<?> matchingClass = getClassWithTransforms(naturalLanguageMethod);
+    MethodRegexIdentifier methodIdentifierWithoutCircularity = new MethodRegexIdentifier() {
+      public String getRegex(Method method) {
+        if (!method.equals(naturalLanguageMethod.getMethod())) {
+          return methodIdentifier.getRegex(method);
+        } else {
+          return null;
+        }
+      }
+    };
     StructuredNaturalLanguageExecuter.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
-            argString, methodIdentifier, matchingClass);
+            argString, methodIdentifier, methodIdentifierWithoutCircularity, matchingClass);
     if (match != null && !match.getNaturalLanguageMethod().equals(naturalLanguageMethod)) {
       if (LOGGER.isLoggable(Level.FINE)) {
         LOGGER.log(Level.FINE, "Converting " + argString + " using " + match.getNaturalLanguageMethod().getMethod());

@@ -33,7 +33,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -42,7 +43,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithTransformToSubclass() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say size of [a, b, c]", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say size of [a, b, c]", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "3");
   }
@@ -51,7 +53,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithTransformToSubclass2() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say size of {a, b, c, d}", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say size of {a, b, c, d}", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "4");
   }
@@ -60,7 +63,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseAvoidsWrongTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times (as string)", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"hello\" 10 times (as string)", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -69,7 +73,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithTransform_AttemptingCircular() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"circular1\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"circular1\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2");
   }
@@ -79,7 +84,8 @@ public class TestStructuredNaturalLanguageExecuter {
     assertNotNull("executer should have been set", executer);
 
     try {
-      executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(TagAnnotation.class), Talker.class);
+      executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(TagAnnotation.class),
+              AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
       fail("expected exception");
     }
     catch (IllegalStateException e) {
@@ -97,7 +103,8 @@ public class TestStructuredNaturalLanguageExecuter {
   public void testParseWithAlternateTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hi\" one time", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"hi\" one time", AnnotationMethodRegexIdentifier.getInstance(Command.class),
+            AnnotationMethodRegexIdentifier.getInstance(Transform.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hi");
   }
@@ -187,6 +194,21 @@ public class TestStructuredNaturalLanguageExecuter {
   @Target({ElementType.METHOD})
   @Retention(RetentionPolicy.RUNTIME)
   public static @interface TagAnnotation {
+  }
+
+  /**
+ * An annotation for methods that indicates it can transform String arguments to the correct parameter type.
+   *
+   * @author pabstec
+   */
+  @Target({ElementType.METHOD})
+  @Retention(RetentionPolicy.RUNTIME)
+  public static @interface Transform {
+    /**
+     * The regular expression to match against for the target method to be used.
+     * @return the regular expression string
+     */
+    public abstract String value();
   }
 }
 

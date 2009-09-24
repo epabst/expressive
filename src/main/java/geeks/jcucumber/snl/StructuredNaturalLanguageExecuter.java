@@ -26,8 +26,8 @@ public class StructuredNaturalLanguageExecuter {
     naturalLanguageFactory = new NaturalLanguageFactory(this);
   }
 
-  public Object execute(String languageString, MethodRegexIdentifier regexIdentifier, Class<?> matchingClass) {
-    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexIdentifier, matchingClass);
+  public Object execute(String languageString, MethodRegexIdentifier regexIdentifier, MethodRegexIdentifier transformMethodIdentifier, Class<?> matchingClass) {
+    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexIdentifier, transformMethodIdentifier, matchingClass);
     if (match != null) {
       return invokeMethod(match, matchingClass);
     }
@@ -40,8 +40,8 @@ public class StructuredNaturalLanguageExecuter {
     return match.invokeMethod(objectToInvoke);
   }
 
-  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexIdentifier regexIdentifier, Class<?> matchingClass) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, matchingClass);
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexIdentifier regexIdentifier, MethodRegexIdentifier transformMethodIdentifier, Class<?> matchingClass) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, transformMethodIdentifier, matchingClass);
     NaturalLanguageMethodMatch match = null;
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       match = match(naturalLanguageMethod, languageString);
