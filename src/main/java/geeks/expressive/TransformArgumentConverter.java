@@ -30,15 +30,7 @@ class TransformArgumentConverter implements ArgumentConverter {
 
   public Object convertArgument(String argString, final NaturalLanguageMethod naturalLanguageMethod, int index) {
     Class<?> matchingClass = getClassWithTransforms(naturalLanguageMethod);
-    MethodRegexAssociation noncircularRegexAssociation = new MethodRegexAssociation() {
-      public String findRegex(Method method) {
-        if (!method.equals(naturalLanguageMethod.getMethod())) {
-          return transformRegexAssociation.findRegex(method);
-        } else {
-          return null;
-        }
-      }
-    };
+    MethodRegexAssociation noncircularRegexAssociation = new NoncircularRegexAssociation(naturalLanguageMethod, transformRegexAssociation);
     Expressive.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
             argString, transformRegexAssociation, noncircularRegexAssociation, matchingClass);
     if (match != null && !match.getNaturalLanguageMethod().equals(naturalLanguageMethod)) {
@@ -53,5 +45,39 @@ class TransformArgumentConverter implements ArgumentConverter {
 
   private Class<?> getClassWithTransforms(NaturalLanguageMethod naturalLanguageMethod) {
     return naturalLanguageMethod.getMethod().getDeclaringClass();
+  }
+
+  static class NoncircularRegexAssociation implements MethodRegexAssociation {
+    private final NaturalLanguageMethod naturalLanguageMethod;
+    private final MethodRegexAssociation delegate;
+
+    public NoncircularRegexAssociation(NaturalLanguageMethod naturalLanguageMethod, MethodRegexAssociation delegate) {
+      this.naturalLanguageMethod = naturalLanguageMethod;
+      this.delegate = delegate;
+    }
+
+    public String findRegex(Method method) {
+      if (!method.equals(naturalLanguageMethod.getMethod())) {
+        return delegate.findRegex(method);
+      } else {
+        return null;
+      }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      NoncircularRegexAssociation that = (NoncircularRegexAssociation) o;
+      return delegate.equals(that.delegate) && naturalLanguageMethod.equals(that.naturalLanguageMethod);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = naturalLanguageMethod.hashCode();
+      result = 31 * result + delegate.hashCode();
+      return result;
+    }
   }
 }

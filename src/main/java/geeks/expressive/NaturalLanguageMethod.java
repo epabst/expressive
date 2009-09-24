@@ -38,7 +38,7 @@ public class NaturalLanguageMethod {
     if (o == null || getClass() != o.getClass()) return false;
 
     NaturalLanguageMethod that = (NaturalLanguageMethod) o;
-    return pattern.pattern().equals(that.pattern.pattern()) && method.equals(that.method);
+    return pattern.pattern().equals(that.pattern.pattern()) && method.equals(that.method) && converters.equals(that.converters);
   }
 
   @Override
