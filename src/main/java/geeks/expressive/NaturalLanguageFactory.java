@@ -1,4 +1,4 @@
-package geeks.jcucumber.snl;
+package geeks.expressive;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import java.lang.reflect.Method;
 
 /**
- * A factory for {@link geeks.jcucumber.snl.NaturalLanguageMethod}s.
+ * A factory for {@link NaturalLanguageMethod}s.
  *
  * @author pabstec
  */

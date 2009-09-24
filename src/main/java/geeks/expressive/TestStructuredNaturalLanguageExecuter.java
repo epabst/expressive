@@ -1,4 +1,4 @@
-package geeks.jcucumber.snl;
+package geeks.expressive;
 
 import org.picocontainer.DefaultPicoContainer;
 import org.picocontainer.injectors.ConstructorInjection;

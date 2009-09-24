@@ -1,4 +1,4 @@
-package geeks.jcucumber.snl;
+package geeks.expressive;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

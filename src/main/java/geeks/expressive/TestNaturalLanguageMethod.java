@@ -1,4 +1,4 @@
-package geeks.jcucumber.snl;
+package geeks.expressive;
 
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 
 /**
- * A test for {@link geeks.jcucumber.snl.NaturalLanguageMethod}.
+ * A test for {@link NaturalLanguageMethod}.
  *
  * @author pabstec
  */
