@@ -16,17 +16,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 
 /**
- * A test for {@link StructuredNaturalLanguageExecuter}.
+ * A test for {@link Expressive}.
  *
  * @author pabstec
  */
 ///CLOVER:OFF
-public class TestStructuredNaturalLanguageExecuter {
-  private StructuredNaturalLanguageExecuter executer;
+public class TestExpressive {
+  private Expressive executer;
 
   @BeforeMethod
   private void setup() {
-    executer = new StructuredNaturalLanguageExecuter(new DefaultPicoContainer(new ConstructorInjection()));
+    executer = new Expressive(new DefaultPicoContainer(new ConstructorInjection()));
   }
 
   @Test

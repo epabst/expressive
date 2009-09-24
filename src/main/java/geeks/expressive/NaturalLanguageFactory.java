@@ -15,9 +15,9 @@ class NaturalLanguageFactory {
   private static final Logger LOGGER = Logger.getLogger(NaturalLanguageFactory.class.getName());
   private static final Level DEBUG_LEVEL = Level.INFO;
   private final Map<List<?>,List<NaturalLanguageMethod>> cachedNaturalLanguageMethodsByClasses = new HashMap<List<?>,List<NaturalLanguageMethod>>();
-  private final StructuredNaturalLanguageExecuter executer;
+  private final Expressive executer;
 
-  public NaturalLanguageFactory(StructuredNaturalLanguageExecuter executer) {
+  public NaturalLanguageFactory(Expressive executer) {
     this.executer = executer;
   }
 
@@ -70,7 +70,7 @@ class NaturalLanguageFactory {
     return new NaturalLanguageMethod(method, pattern, createArgumentConverters(method, executer, transformMethodIdentifier));
   }
 
-  private List<ArgumentConverter> createArgumentConverters(Method method, StructuredNaturalLanguageExecuter executer, MethodRegexIdentifier transformMethodIdentifier) {
+  private List<ArgumentConverter> createArgumentConverters(Method method, Expressive executer, MethodRegexIdentifier transformMethodIdentifier) {
     Class<?>[] parameterTypes = method.getParameterTypes();
     List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(parameterTypes.length);
     for (Class<?> parameterType : parameterTypes) {

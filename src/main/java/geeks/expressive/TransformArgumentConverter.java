@@ -11,10 +11,10 @@ import java.lang.reflect.Method;
  */
 class TransformArgumentConverter implements ArgumentConverter {
   private static final Logger LOGGER = Logger.getLogger(TransformArgumentConverter.class.getName());
-  private final StructuredNaturalLanguageExecuter executer;
+  private final Expressive executer;
   private final MethodRegexIdentifier methodIdentifier;
 
-  public TransformArgumentConverter(final Class<?> targetType, StructuredNaturalLanguageExecuter executer, final MethodRegexIdentifier transformMethodIdentifier) {
+  public TransformArgumentConverter(final Class<?> targetType, Expressive executer, final MethodRegexIdentifier transformMethodIdentifier) {
     this.executer = executer;
     this.methodIdentifier = new MethodRegexIdentifier() {
       public String getRegex(Method method) {
@@ -39,7 +39,7 @@ class TransformArgumentConverter implements ArgumentConverter {
         }
       }
     };
-    StructuredNaturalLanguageExecuter.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
+    Expressive.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
             argString, methodIdentifier, methodIdentifierWithoutCircularity, matchingClass);
     if (match != null && !match.getNaturalLanguageMethod().equals(naturalLanguageMethod)) {
       if (LOGGER.isLoggable(Level.FINE)) {

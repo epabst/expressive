@@ -14,14 +14,14 @@ import java.util.logging.Level;
  *
  * @author pabstec
  */
-public class StructuredNaturalLanguageExecuter {
-  static final Logger LOGGER = Logger.getLogger(StructuredNaturalLanguageExecuter.class.getName());
+public class Expressive {
+  static final Logger LOGGER = Logger.getLogger(Expressive.class.getName());
   private final MutablePicoContainer container;
   private final Map<Class<?>, Object> addedComponents = new HashMap<Class<?>, Object>();
   private final NaturalLanguageFactory naturalLanguageFactory;
   private static final Level DEBUG_LEVEL = Level.INFO;
 
-  public StructuredNaturalLanguageExecuter(MutablePicoContainer container) {
+  public Expressive(MutablePicoContainer container) {
     this.container = container;
     naturalLanguageFactory = new NaturalLanguageFactory(this);
   }
