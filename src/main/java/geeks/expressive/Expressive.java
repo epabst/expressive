@@ -46,6 +46,9 @@ public class Expressive {
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       match = match(naturalLanguageMethod, languageString);
       if (match != null) {
+        if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod.getPattern());
+        }
         break;
       }
     }
@@ -53,8 +56,8 @@ public class Expressive {
   }
 
   private NaturalLanguageMethodMatch match(NaturalLanguageMethod naturalLanguageMethod, String inputString) {
-    if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-      LOGGER.log(DEBUG_LEVEL, "Checking " + naturalLanguageMethod.getPattern() + " for match with '" + inputString + "'");
+    if (LOGGER.isLoggable(Level.FINEST)) {
+      LOGGER.log(Level.FINEST, "Checking " + naturalLanguageMethod.getPattern() + " for match with '" + inputString + "'");
     }
     Matcher matcher = naturalLanguageMethod.getPattern().matcher(inputString);
     if (matcher.matches()) {
@@ -64,6 +67,7 @@ public class Expressive {
   }
 
   <T> T addAndGetComponent(Class<T> componentClass) {
+    //noinspection ConstantIfStatement
     if (false) {
       //todo why doesn't this work?
       if (container.getComponent(componentClass) == null) {
