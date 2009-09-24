@@ -29,30 +29,21 @@ public class TestStructuredNaturalLanguageExecuter {
   }
 
   @Test
-  public void testParseWithoutToken() {
+  public void testParseWithTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times without token", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
-  public void testParseWithTokenAndRegex() {
+  public void testParseWithTransform_AttemptingCircular() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times with token and regex", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
+    executer.execute("say \"circular1\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
     Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
-  }
-
-  @Test
-  public void testParseWithRegexAndToken() {
-    assertNotNull("executer should have been set", executer);
-
-    executer.execute("say \"hello\" 10 times with regex and token", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
-    Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
+    assertEquals(talker.getResult(), "circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2");
   }
 
   @Test
@@ -75,16 +66,7 @@ public class TestStructuredNaturalLanguageExecuter {
   }
 
   @Test
-  public void testParseWithToken() {
-    assertNotNull("executer should have been set", executer);
-
-    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
-    Talker talker = executer.addAndGetComponent(Talker.class);
-    assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
-  }
-
-  @Test
-  public void testParseWithAlternateToken() {
+  public void testParseWithAlternateTransform() {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say \"hi\" one time", AnnotationMethodRegexIdentifier.getInstance(Command.class), Talker.class);
@@ -92,29 +74,12 @@ public class TestStructuredNaturalLanguageExecuter {
     assertEquals(talker.getResult(), "hi");
   }
 
-  @UsesTokens({
-          @UsesToken(token = "SomeInteger", regex = ".*?", annotation = SomeInteger.class),
-          @UsesToken(token = "QuotedString", annotation = QuotedString.class, recognizer = LiteralStrings.class)
-  })
   public static class Talker {
     private String result;
+    private static final String QUOTED_STRING = "\".*\"";
+    private static final String INTEGER = ".*?";
 
-    @Command("^say \"([^\"]+)\" ([0-9]+) times? without token$")
-    public void saySomethingNTimesWithoutToken(String message, String count) {
-      saySomethingNTimes(message, Integer.parseInt(count));
-    }
-
-    @Command("^say {QuotedString} ([0-9]+) times? with token and regex$")
-    public void saySomethingNTimesWithTokenAndRegex(String message, String count) {
-      saySomethingNTimes(message, Integer.parseInt(count));
-    }
-
-    @Command("^say \"([^\"]+)\" {SomeInteger} times? with regex and token$")
-    public void saySomethingNTimesWithOneToken(String message, int count) {
-      saySomethingNTimes(message, count);
-    }
-
-    @Command("^say {QuotedString} {SomeInteger} times?$")
+    @Command("^say (" + QUOTED_STRING + ") (" + INTEGER + ") times?$")
     public void saySomethingNTimes(String message, int count) {
       StringBuffer buffer = new StringBuffer(message);
       for (int i = 1; i < count; i++) {
@@ -123,20 +88,31 @@ public class TestStructuredNaturalLanguageExecuter {
       result = buffer.toString();
     }
 
-    @SomeInteger("^([0-9]+)$")
+    @Transform("^([0-9]+)$")
     public int integer(String number) {
       return java.lang.Integer.parseInt(number);
     }
 
-    @SomeInteger("^one$")
+    @Transform("^one$")
     public int one() {
       return 1;
     }
 
-    //put this here just to make sure it isn't used
-    @QuotedString("^\".*\"$")
-    public String quotedString() {
-      return "this should not be used";
+    @Transform("^\"(.*)\"$")
+    String quotedString(String string) {
+      return string;
+    }
+
+    @SuppressWarnings({"UnusedDeclaration"})
+    @Transform("^(circular1)$")
+    public String circular1(String string) {
+      return "circular2";
+    }
+
+    @SuppressWarnings({"UnusedDeclaration"})
+    @Transform("^(circular2)$")
+    public String circular2(String string) {
+      return "circular1";
     }
 
     @TagAnnotation()
@@ -149,29 +125,10 @@ public class TestStructuredNaturalLanguageExecuter {
     }
   }
 
-  public static class LiteralStrings {
-    @QuotedString("^\"(.*)\"$")
-    String quotedString(String string) {
-      return string;
-    }
-  }
-
   @Target({ElementType.METHOD})
   @Retention(RetentionPolicy.RUNTIME)
   public static @interface Command {
     java.lang.String value();
-  }
-
-  @Target({ElementType.METHOD})
-  @Retention(RetentionPolicy.RUNTIME)
-  public static @interface SomeInteger {
-    String value();
-  }
-
-  @Target({ElementType.METHOD})
-  @Retention(RetentionPolicy.RUNTIME)
-  public static @interface QuotedString {
-    String value();
   }
 
   @Target({ElementType.METHOD})

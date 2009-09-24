@@ -27,16 +27,29 @@ public class StructuredNaturalLanguageExecuter {
   }
 
   public Object execute(String languageString, MethodRegexIdentifier regexIdentifier, Class<?> matchingClass) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, matchingClass);
-    for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
-      NaturalLanguageMethodMatch match = match(naturalLanguageMethod, languageString);
-      if (match != null) {
-        Object objectToInvoke = addAndGetComponent(matchingClass);
-        return match.invokeMethod(objectToInvoke);
-      }
+    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexIdentifier, matchingClass);
+    if (match != null) {
+      return invokeMethod(match, matchingClass);
     }
     throw new IllegalStateException("No matching " + regexIdentifier
             + " method found for '" + languageString + "' in " + matchingClass);
+  }
+
+  Object invokeMethod(NaturalLanguageMethodMatch match, Class<?> matchingClass) {
+    Object objectToInvoke = addAndGetComponent(matchingClass);
+    return match.invokeMethod(objectToInvoke);
+  }
+
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexIdentifier regexIdentifier, Class<?> matchingClass) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = naturalLanguageFactory.getNaturalLanguageMethods(regexIdentifier, matchingClass);
+    NaturalLanguageMethodMatch match = null;
+    for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
+      match = match(naturalLanguageMethod, languageString);
+      if (match != null) {
+        break;
+      }
+    }
+    return match;
   }
 
   private NaturalLanguageMethodMatch match(NaturalLanguageMethod naturalLanguageMethod, String inputString) {
@@ -71,7 +84,7 @@ public class StructuredNaturalLanguageExecuter {
   *
   * @author pabstec
   */
-  private static class NaturalLanguageMethodMatch {
+  static class NaturalLanguageMethodMatch {
     private final NaturalLanguageMethod naturalLanguageMethod;
     private final Matcher matcher;
 

@@ -31,4 +31,29 @@ public class NaturalLanguageMethod {
   public List<ArgumentConverter> getArgumentConverters() {
     return converters;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    NaturalLanguageMethod that = (NaturalLanguageMethod) o;
+    return method.equals(that.method) && pattern.pattern().equals(that.pattern.pattern());
+  }
+
+  @Override
+  public int hashCode() {
+    int result = method.hashCode();
+    result = 31 * result + pattern.pattern().hashCode();
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "NaturalLanguageMethod{" +
+            "method=" + method +
+            ", pattern=" + pattern +
+            ", converters=" + converters +
+            '}';
+  }
 }

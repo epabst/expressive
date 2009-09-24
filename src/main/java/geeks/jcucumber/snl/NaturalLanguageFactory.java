@@ -14,8 +14,6 @@ import java.lang.reflect.Method;
 class NaturalLanguageFactory {
   private static final Logger LOGGER = Logger.getLogger(NaturalLanguageFactory.class.getName());
   private static final Level DEBUG_LEVEL = Level.INFO;
-  private static final char TOKEN_START_DELIM = '{';
-  private static final char TOKEN_END_DELIM = '}';
   private final Map<List<?>,List<NaturalLanguageMethod>> cachedNaturalLanguageMethodsByClasses = new HashMap<List<?>,List<NaturalLanguageMethod>>();
   private final StructuredNaturalLanguageExecuter executer;
 
@@ -67,43 +65,16 @@ class NaturalLanguageFactory {
   }
 
   private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens) {
-    String regex = regexWithTokens;
-    Map<Integer, UsesToken> tokenByIndex = new TreeMap<Integer, UsesToken>();
-    int groupIndexInOriginal = -1;
-    //identify all of the pre-existing non-token groups
-    while ((groupIndexInOriginal = regexWithTokens.indexOf("(", groupIndexInOriginal + 1)) >= 0) {
-      tokenByIndex.put(groupIndexInOriginal, null);
-    }
-    for (UsesToken token : getTokens(method.getDeclaringClass())) {
-      String tokenWithDelims = TOKEN_START_DELIM + token.token() + TOKEN_END_DELIM;
-      int indexInOriginal = -1;
-      while ((indexInOriginal = regexWithTokens.indexOf(tokenWithDelims, indexInOriginal + 1)) >= 0) {
-        regex = regex.replace(tokenWithDelims, '(' + token.regex() + ')');
-        tokenByIndex.put(indexInOriginal, token);
-      }
-    }
-    if (LOGGER.isLoggable(Level.FINE)) {
-      LOGGER.log(Level.FINE, "Established tokenByIndex: " + tokenByIndex);
-    }
-    return new NaturalLanguageMethod(method, Pattern.compile(regex), createConverters(tokenByIndex, executer));
+    Pattern pattern = Pattern.compile(regexWithTokens);
+    return new NaturalLanguageMethod(method, pattern, createConverters(method.getParameterTypes().length, executer));
   }
 
-  private List<ArgumentConverter> createConverters(Map<Integer, UsesToken> tokenByIndex, StructuredNaturalLanguageExecuter executer) {
-    List<UsesToken> orderedTokensAndNulls = new ArrayList<UsesToken>(tokenByIndex.values());
-    List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(orderedTokensAndNulls.size());
-    for (UsesToken token : orderedTokensAndNulls) {
-      converters.add(token != null ? new TokenArgumentConverter(token, executer) : ArgumentConverter.IDENTITY);
+  private List<ArgumentConverter> createConverters(int count, StructuredNaturalLanguageExecuter executer) {
+    List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(count);
+    for (int i = 0; i < count; i++) {
+      converters.add(new TransformArgumentConverter(executer));
     }
     return converters;
   }
 
-  private List<UsesToken> getTokens(Class<?> classWithAnnotations) {
-    UsesTokens usesTokenAnnotation = classWithAnnotations.getAnnotation(UsesTokens.class);
-    if (usesTokenAnnotation != null) {
-      return Arrays.asList(usesTokenAnnotation.value());
-    }
-    else {
-      return Collections.emptyList();
-    }
-  }
 }
