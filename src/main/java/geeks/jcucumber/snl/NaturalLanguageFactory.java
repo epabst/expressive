@@ -66,13 +66,14 @@ class NaturalLanguageFactory {
 
   private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens) {
     Pattern pattern = Pattern.compile(regexWithTokens);
-    return new NaturalLanguageMethod(method, pattern, createConverters(method.getParameterTypes().length, executer));
+    return new NaturalLanguageMethod(method, pattern, createArgumentConverters(method, executer));
   }
 
-  private List<ArgumentConverter> createConverters(int count, StructuredNaturalLanguageExecuter executer) {
-    List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(count);
-    for (int i = 0; i < count; i++) {
-      converters.add(new TransformArgumentConverter(executer));
+  private List<ArgumentConverter> createArgumentConverters(Method method, StructuredNaturalLanguageExecuter executer) {
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(parameterTypes.length);
+    for (Class<?> parameterType : parameterTypes) {
+      converters.add(new TransformArgumentConverter(parameterType, executer));
     }
     return converters;
   }

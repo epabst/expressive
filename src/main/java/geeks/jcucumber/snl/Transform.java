@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * An annotation for methods that transform String arguments fromrecognize structured natural language.
+ * An annotation for methods that indicates it can transform String arguments to the correct parameter type.
  *
  * @author pabstec
  */
