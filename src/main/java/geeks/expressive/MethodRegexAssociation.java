@@ -4,6 +4,7 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.Collections;
 
 /**
  * An object that locates the regular expression for a Method.
@@ -11,6 +12,15 @@ import java.util.Set;
  * @author pabstec
  */
 public interface MethodRegexAssociation {
+  MethodRegexAssociation NONE = new MethodRegexAssociation() {
+    public String findRegex(Method method) {
+      return null;
+    }
+
+    public Set<Method> getMethods(Reflections reflections) {
+      return Collections.emptySet();
+    }
+  };
 
   /**
    * Finds the regular expression associated with the given method.

@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 /**
  * A parser for structured natural language that executes it based on mapping it to methods.
@@ -29,6 +31,13 @@ public class Expressive {
 
   public Expressive(MutablePicoContainer container) {
     this.container = container;
+  }
+
+  public void execute(BufferedReader reader, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) throws IOException {
+    String string;
+    while ((string = reader.readLine()) != null) {
+      execute(string, regexAssociation, transformRegexAssociation, reflections);
+    }
   }
 
   public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
@@ -126,7 +135,7 @@ public class Expressive {
       match = match(naturalLanguageMethod, languageString);
       if (match != null) {
         if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod.getPattern());
+          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod);
         }
         break;
       }

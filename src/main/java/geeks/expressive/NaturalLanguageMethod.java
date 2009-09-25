@@ -50,10 +50,6 @@ public class NaturalLanguageMethod {
 
   @Override
   public String toString() {
-    return "NaturalLanguageMethod{" +
-            "pattern=" + pattern +
-            ", method=" + method +
-            ", converters=" + converters +
-            '}';
+    return pattern + ":" + method.getName();
   }
 }
