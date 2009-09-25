@@ -34,8 +34,8 @@ public class TestExpressive {
   public void testParseWithTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -44,8 +44,8 @@ public class TestExpressive {
   public void testParseWithTransformToSubclass() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say size of [a, b, c]", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say size of [a, b, c]", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "3");
   }
@@ -54,8 +54,8 @@ public class TestExpressive {
   public void testParseWithTransformToSubclass2() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say size of {a, b, c, d}", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say size of {a, b, c, d}", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "4");
   }
@@ -64,8 +64,8 @@ public class TestExpressive {
   public void testParseWithTransformUsingSearchPath() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say date 10/21/2008", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(TestExpressive.class.getPackage()));
+    executer.execute("say date 10/21/2008", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(TestExpressive.class.getPackage()));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "October 21, 2008");
   }
@@ -74,8 +74,8 @@ public class TestExpressive {
   public void testParseAvoidsWrongTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hello\" 10 times (as string)", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say \"hello\" 10 times (as string)", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -84,8 +84,8 @@ public class TestExpressive {
   public void testParseWithTransform_AttemptingCircular() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"circular1\" 10 times", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say \"circular1\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2");
   }
@@ -95,8 +95,8 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     try {
-      executer.execute("say \"hello\" 10 times", AnnotationMethodRegexAssociation.getInstance(TagAnnotation.class),
-              AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+      executer.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(TagAnnotation.class),
+              new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
       fail("expected exception");
     }
     catch (IllegalStateException e) {
@@ -114,8 +114,8 @@ public class TestExpressive {
   public void testParseWithAlternateTransform() {
     assertNotNull("executer should have been set", executer);
 
-    executer.execute("say \"hi\" one time", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    executer.execute("say \"hi\" one time", new AnnotationMethodRegexAssociation(Command.class),
+            new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hi");
   }

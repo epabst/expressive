@@ -11,20 +11,16 @@ import java.util.Set;
  *
  * @author pabstec
  */
-class AnnotationMethodRegexAssociation<T extends Annotation> implements MethodRegexAssociation {
-  private final Class<T> annotationClass;
+class AnnotationMethodRegexAssociation implements MethodRegexAssociation {
+  private final Class<? extends Annotation> annotationClass;
   private final Method annotationValueMethod;
 
-  public static <T extends Annotation> AnnotationMethodRegexAssociation<T> getInstance(Class<T> annotationClass) {
-    return new AnnotationMethodRegexAssociation<T>(annotationClass);
-  }
-
-  private AnnotationMethodRegexAssociation(Class<T> annotationClass) {
+  public <T extends Annotation> AnnotationMethodRegexAssociation(Class<T> annotationClass) {
     this.annotationClass = annotationClass;
     annotationValueMethod = getValueMethod(annotationClass);
   }
 
-  public Class<T> getAnnotationClass() {
+  public Class<? extends Annotation> getAnnotationClass() {
     return annotationClass;
   }
 
