@@ -1,7 +1,10 @@
 package geeks.expressive;
 
+import org.reflections.Reflections;
+
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.Set;
 import java.lang.reflect.Method;
 
 /**
@@ -13,9 +16,11 @@ class TransformArgumentConverter implements ArgumentConverter {
   private static final Logger LOGGER = Logger.getLogger(TransformArgumentConverter.class.getName());
   private final Expressive executer;
   private final MethodRegexAssociation transformRegexAssociation;
+  private final Reflections reflections;
 
-  public TransformArgumentConverter(final Class<?> targetType, Expressive executer, final MethodRegexAssociation transformRegexAssociation) {
+  public TransformArgumentConverter(final Class<?> targetType, Expressive executer, final MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     this.executer = executer;
+    this.reflections = reflections;
     this.transformRegexAssociation = new MethodRegexAssociation() {
       public String findRegex(Method method) {
         if (targetType.isAssignableFrom(method.getReturnType())) {
@@ -25,26 +30,26 @@ class TransformArgumentConverter implements ArgumentConverter {
           return null;
         }
       }
+
+      public Set<Method> getMethods(Reflections reflections) {
+        //todo filter by return type
+        return transformRegexAssociation.getMethods(reflections);
+      }
     };
   }
 
   public Object convertArgument(String argString, final NaturalLanguageMethod naturalLanguageMethod, int index) {
-    Class<?> matchingClass = getClassWithTransforms(naturalLanguageMethod);
     MethodRegexAssociation noncircularRegexAssociation = new NoncircularRegexAssociation(naturalLanguageMethod, transformRegexAssociation);
     Expressive.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
-            argString, transformRegexAssociation, noncircularRegexAssociation, matchingClass);
+            argString, transformRegexAssociation, noncircularRegexAssociation, reflections);
     if (match != null && !match.getNaturalLanguageMethod().equals(naturalLanguageMethod)) {
       if (LOGGER.isLoggable(Level.FINE)) {
         LOGGER.log(Level.FINE, "Converting " + argString + " using " + match.getNaturalLanguageMethod().getMethod());
       }
-      return executer.invokeMethod(match, matchingClass);
+      return executer.invokeMethod(match);
     } else {
       return argString;
     }
-  }
-
-  private Class<?> getClassWithTransforms(NaturalLanguageMethod naturalLanguageMethod) {
-    return naturalLanguageMethod.getMethod().getDeclaringClass();
   }
 
   static class NoncircularRegexAssociation implements MethodRegexAssociation {
@@ -62,6 +67,11 @@ class TransformArgumentConverter implements ArgumentConverter {
       } else {
         return null;
       }
+    }
+
+    public Set<Method> getMethods(Reflections reflections) {
+      //todo remove naturalLanguageMethod.getMethod()
+      return delegate.getMethods(reflections);
     }
 
     @Override

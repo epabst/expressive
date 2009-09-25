@@ -1,6 +1,11 @@
 package geeks.expressive;
 
 import org.picocontainer.MutablePicoContainer;
+import org.reflections.Reflections;
+import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.util.AbstractConfiguration;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.FilterBuilder;
 
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
@@ -26,39 +31,54 @@ public class Expressive {
     this.container = container;
   }
 
-  public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
-    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexAssociation, transformRegexAssociation, matchingClass);
+  public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexAssociation, transformRegexAssociation, reflections);
     if (match != null) {
-      return invokeMethod(match, matchingClass);
+      return invokeMethod(match);
     }
     throw new IllegalStateException("No method with " + regexAssociation
-            + " found for '" + languageString + "' in " + matchingClass);
+            + " found for '" + languageString + "' in " + reflections);
   }
 
-  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
-    List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, matchingClass);
+  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+    List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, reflections);
     List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
     if (naturalLanguageMethods == null) {
-      naturalLanguageMethods = findNaturalLanguageMethods(regexAssociation, transformRegexAssociation, matchingClass);
+      naturalLanguageMethods = findNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
       cachedNaturalLanguageMethodsByClasses.put(key, naturalLanguageMethods);
     }
     return naturalLanguageMethods;
   }
 
-  private List<NaturalLanguageMethod> findNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
-    Method[] methods = matchingClass.getDeclaredMethods();
-    List<NaturalLanguageMethod> naturalLanguageMethods = new ArrayList<NaturalLanguageMethod>(methods.length);
-    for (Method method : methods) {
-      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, regexAssociation, transformRegexAssociation);
+  private List<NaturalLanguageMethod> findNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = new LinkedList<NaturalLanguageMethod>();
+    for (Method method : regexAssociation.getMethods(reflections)) {
+      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, regexAssociation, transformRegexAssociation, reflections);
       if (naturalLanguageMethod != null) {
         naturalLanguageMethods.add(naturalLanguageMethod);
       }
     }
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
       LOGGER.log(DEBUG_LEVEL, "Found methods with " + regexAssociation + " in "
-              + matchingClass + ": " + naturalLanguageMethods);
+              + reflections + ": " + naturalLanguageMethods);
     }
     return naturalLanguageMethods;
+  }
+
+  public static Reflections toReflections(final Class<?> matchingClass) {
+    return new Reflections(new AbstractConfiguration() {{
+      setFilter(new FilterBuilder().include(".*"));
+      setUrls(Arrays.asList(ClasspathHelper.getUrlForClass(matchingClass)));
+      setScanners(new MethodAnnotationsScanner());
+    }});
+  }
+
+  public static Reflections toReflections(final Package matchingPackage) {
+    return new Reflections(new AbstractConfiguration() {{
+      setFilter(new FilterBuilder().include(".*"));
+      setUrls(ClasspathHelper.getUrlsForPackagePrefix(matchingPackage.getName()));
+      setScanners(new MethodAnnotationsScanner());
+    }});
   }
 
   /**
@@ -66,9 +86,10 @@ public class Expressive {
    * @param method the Method
    * @param regexAssociation a matcher for candidate methods
    * @param transformRegexAssociation a matcher for methods that can transform values
+   * @param reflections which classes to consider
    * @return a NaturalLanguageMethod
    */
-  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation) {
+  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     if (LOGGER.isLoggable(Level.FINEST)) {
       LOGGER.log(Level.FINEST, "Seeing if method " + method + " has " + regexAssociation);
     }
@@ -76,30 +97,30 @@ public class Expressive {
     if (regex == null) {
       return null;
     }
-    return toNaturalLanguageMethod(method, regex, transformRegexAssociation);
+    return toNaturalLanguageMethod(method, regex, transformRegexAssociation, reflections);
   }
 
-  private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens, MethodRegexAssociation transformRegexAssociation) {
+  private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     Pattern pattern = Pattern.compile(regexWithTokens);
-    return new NaturalLanguageMethod(pattern, method, createArgumentConverters(method, transformRegexAssociation));
+    return new NaturalLanguageMethod(pattern, method, createArgumentConverters(method, transformRegexAssociation, reflections));
   }
 
-  private List<ArgumentConverter> createArgumentConverters(Method method, MethodRegexAssociation transformRegexAssociation) {
+  private List<ArgumentConverter> createArgumentConverters(Method method, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     Class<?>[] parameterTypes = method.getParameterTypes();
     List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(parameterTypes.length);
     for (Class<?> parameterType : parameterTypes) {
-      converters.add(new TransformArgumentConverter(parameterType, this, transformRegexAssociation));
+      converters.add(new TransformArgumentConverter(parameterType, this, transformRegexAssociation, reflections));
     }
     return converters;
   }
 
-  Object invokeMethod(NaturalLanguageMethodMatch match, Class<?> matchingClass) {
-    Object objectToInvoke = addAndGetComponent(matchingClass);
+  Object invokeMethod(NaturalLanguageMethodMatch match) {
+    Object objectToInvoke = addAndGetComponent(match.getNaturalLanguageMethod().getMethod().getDeclaringClass());
     return match.invokeMethod(objectToInvoke);
   }
 
-  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Class<?> matchingClass) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, matchingClass);
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
     NaturalLanguageMethodMatch match = null;
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       match = match(naturalLanguageMethod, languageString);

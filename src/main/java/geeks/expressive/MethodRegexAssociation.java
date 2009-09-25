@@ -1,6 +1,9 @@
 package geeks.expressive;
 
+import org.reflections.Reflections;
+
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  * An object that locates the regular expression for a Method.
@@ -21,4 +24,11 @@ public interface MethodRegexAssociation {
    * @return a String
    */
   String toString();
+
+  /**
+   * Gets the methods found within the Reflections that are associated.
+   * @param reflections the Reflections
+   * @return the methods
+   */
+  Set<Method> getMethods(Reflections reflections);
 }

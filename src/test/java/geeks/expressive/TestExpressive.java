@@ -14,6 +14,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.*;
+import java.text.DateFormat;
 
 /**
  * A test for {@link Expressive}.
@@ -34,7 +35,7 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say \"hello\" 10 times", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -44,7 +45,7 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say size of [a, b, c]", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "3");
   }
@@ -54,9 +55,19 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say size of {a, b, c, d}", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "4");
+  }
+
+  @Test
+  public void testParseWithTransformUsingSearchPath() {
+    assertNotNull("executer should have been set", executer);
+
+    executer.execute("say date 10/21/2008", AnnotationMethodRegexAssociation.getInstance(Command.class),
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(TestExpressive.class.getPackage()));
+    Talker talker = executer.addAndGetComponent(Talker.class);
+    assertEquals(talker.getResult(), "October 21, 2008");
   }
 
   @Test
@@ -64,7 +75,7 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say \"hello\" 10 times (as string)", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
@@ -74,7 +85,7 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say \"circular1\" 10 times", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2");
   }
@@ -85,7 +96,7 @@ public class TestExpressive {
 
     try {
       executer.execute("say \"hello\" 10 times", AnnotationMethodRegexAssociation.getInstance(TagAnnotation.class),
-              AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+              AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
       fail("expected exception");
     }
     catch (IllegalStateException e) {
@@ -104,7 +115,7 @@ public class TestExpressive {
     assertNotNull("executer should have been set", executer);
 
     executer.execute("say \"hi\" one time", AnnotationMethodRegexAssociation.getInstance(Command.class),
-            AnnotationMethodRegexAssociation.getInstance(Transform.class), Talker.class);
+            AnnotationMethodRegexAssociation.getInstance(TransformForTesting.class), Expressive.toReflections(Talker.class));
     Talker talker = executer.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hi");
   }
@@ -113,6 +124,7 @@ public class TestExpressive {
     private String result;
     private static final String QUOTED_STRING = "\".*\"";
     private static final String COLLECTION_STRING = ".*, .*";
+    private static final String DATE_STRING = ".*/.*";
     private static final String INTEGER = ".*?";
 
     @Command("^say (" + QUOTED_STRING + ") (" + INTEGER + ") times?$")
@@ -138,39 +150,44 @@ public class TestExpressive {
       result = String.valueOf(collection.size());
     }
 
-    @Transform("^([0-9]+)$")
+    @Command("^say date (" + DATE_STRING + ")$")
+    public void sayDate(Date date) {
+      result = DateFormat.getDateInstance(DateFormat.LONG).format(date);
+    }
+
+    @TransformForTesting("^([0-9]+)$")
     public int integer(String number) {
       return java.lang.Integer.parseInt(number);
     }
 
-    @Transform("^one$")
+    @TransformForTesting("^one$")
     public int one() {
       return 1;
     }
 
-    @Transform("^\"(.*)\"$")
-    String quotedString(String string) {
+    @TransformForTesting("^\"(.*)\"$")
+    public String quotedString(String string) {
       return string;
     }
 
-    @Transform("^\\[(.*, .*)\\]$")
-    List<String> stringList(String itemsString) {
+    @TransformForTesting("^\\[(.*, .*)\\]$")
+    public List<String> stringList(String itemsString) {
       return Arrays.asList(itemsString.split(", "));
     }
 
-    @Transform("^\\{(.*, .*)\\}$")
-    Set<String> stringSet(String itemsString) {
+    @TransformForTesting("^\\{(.*, .*)\\}$")
+    public Set<String> stringSet(String itemsString) {
       return new LinkedHashSet<String>(stringList(itemsString));
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    @Transform("^(circular1)$")
+    @TransformForTesting("^(circular1)$")
     public String circular1(String string) {
       return "circular2";
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    @Transform("^(circular2)$")
+    @TransformForTesting("^(circular2)$")
     public String circular2(String string) {
       return "circular1";
     }
@@ -196,19 +213,5 @@ public class TestExpressive {
   public static @interface TagAnnotation {
   }
 
-  /**
- * An annotation for methods that indicates it can transform String arguments to the correct parameter type.
-   *
-   * @author pabstec
-   */
-  @Target({ElementType.METHOD})
-  @Retention(RetentionPolicy.RUNTIME)
-  public static @interface Transform {
-    /**
-     * The regular expression to match against for the target method to be used.
-     * @return the regular expression string
-     */
-    public abstract String value();
-  }
 }
 

@@ -1,7 +1,10 @@
 package geeks.expressive;
 
+import org.reflections.Reflections;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  * A method filter for methods that have a given annotation.
@@ -27,6 +30,10 @@ class AnnotationMethodRegexAssociation<T extends Annotation> implements MethodRe
 
   public String toString() {
     return "@" + annotationClass.getSimpleName();
+  }
+
+  public Set<Method> getMethods(Reflections reflections) {
+    return reflections.getMethodsAnnotatedWith(annotationClass);
   }
 
   public String findRegex(Method method) {
