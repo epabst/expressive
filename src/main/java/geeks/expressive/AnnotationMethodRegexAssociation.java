@@ -11,7 +11,7 @@ import java.util.Set;
  *
  * @author pabstec
  */
-class AnnotationMethodRegexAssociation implements MethodRegexAssociation {
+public class AnnotationMethodRegexAssociation implements MethodRegexAssociation {
   private final Class<? extends Annotation> annotationClass;
   private final Method annotationValueMethod;
 
