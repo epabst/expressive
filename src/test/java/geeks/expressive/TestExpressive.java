@@ -27,7 +27,20 @@ public class TestExpressive {
 
   @BeforeMethod
   private void setup() {
-    executer = new Expressive(new DefaultPicoContainer(new ConstructorInjection()));
+    executer = new Expressive(new ObjectFactory());
+  }
+
+  @Test
+  public void testIgnored() {
+    assertNotNull("executer should have been set", executer);
+
+    List<String> plannedIgnoredLines = Arrays.asList("blah blah blah", "fee fi fo fum");
+    for (String plannedIgnoredLine : plannedIgnoredLines) {
+      executer.execute(plannedIgnoredLine, new AnnotationMethodRegexAssociation(Command.class),
+              new AnnotationMethodRegexAssociation(TransformForTesting.class), Expressive.toReflections(Talker.class));
+    }
+    Talker talker = executer.addAndGetComponent(Talker.class);
+    assertEquals(talker.getIgnoredLines(), plannedIgnoredLines);
   }
 
   @Test
@@ -126,6 +139,12 @@ public class TestExpressive {
     private static final String COLLECTION_STRING = ".*, .*";
     private static final String DATE_STRING = ".*/.*";
     private static final String INTEGER = ".*?";
+    private final List<String> ignoredLines = new LinkedList<String>();
+
+    @Command(Expressive.EVERYTHING_ELSE_REGEX)
+    public void everythingElse(String string) {
+      ignoredLines.add(string);
+    }
 
     @Command("^say (" + QUOTED_STRING + ") (" + INTEGER + ") times?$")
     public void saySomethingNTimes(String message, int count) {
@@ -199,6 +218,10 @@ public class TestExpressive {
 
     public String getResult() {
       return result;
+    }
+
+    public List<String> getIgnoredLines() {
+      return ignoredLines;
     }
   }
 

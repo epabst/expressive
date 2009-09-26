@@ -1,6 +1,5 @@
 package geeks.expressive;
 
-import org.picocontainer.MutablePicoContainer;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.AbstractConfiguration;
@@ -24,13 +23,13 @@ import java.io.IOException;
  */
 public class Expressive {
   static final Logger LOGGER = Logger.getLogger(Expressive.class.getName());
-  private final MutablePicoContainer container;
-  private final Map<Class<?>, Object> addedComponents = new HashMap<Class<?>, Object>();
   private final Map<List<?>,List<NaturalLanguageMethod>> cachedNaturalLanguageMethodsByClasses = new HashMap<List<?>,List<NaturalLanguageMethod>>();
-  private static final Level DEBUG_LEVEL = Level.INFO;
+  private static final Level DEBUG_LEVEL = Level.FINE;
+  public static final String EVERYTHING_ELSE_REGEX = "^(.*)$";
+  private final ObjectFactory objectFactory;
 
-  public Expressive(MutablePicoContainer container) {
-    this.container = container;
+  public Expressive(ObjectFactory objectFactory) {
+    this.objectFactory = objectFactory;
   }
 
   public void execute(BufferedReader reader, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) throws IOException {
@@ -51,17 +50,32 @@ public class Expressive {
 
   NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
-    NaturalLanguageMethodMatch match = null;
+    NaturalLanguageMethodMatch defaultMatch = null;
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
-      match = match(naturalLanguageMethod, languageString);
+      NaturalLanguageMethodMatch match = match(naturalLanguageMethod, languageString);
       if (match != null) {
-        if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod);
+        NaturalLanguageMethod method = match.getNaturalLanguageMethod();
+        if (isCatchAllMethod(method)) {
+          defaultMatch = match;
         }
-        break;
+        else {
+          if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+            LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + match.getNaturalLanguageMethod());
+          }
+          return match;
+        }
       }
     }
-    return match;
+    if (defaultMatch != null) {
+      if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+        LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + defaultMatch.getNaturalLanguageMethod());
+      }
+    }
+    return defaultMatch;
+  }
+
+  private boolean isCatchAllMethod(NaturalLanguageMethod method) {
+    return method.getPattern().pattern().equals(EVERYTHING_ELSE_REGEX);
   }
 
   public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
@@ -139,7 +153,11 @@ public class Expressive {
   }
 
   Object invokeMethod(NaturalLanguageMethodMatch match) {
-    Object objectToInvoke = addAndGetComponent(match.getNaturalLanguageMethod().getMethod().getDeclaringClass());
+    return invokeMethod(match, match.getNaturalLanguageMethod().getMethod());
+  }
+
+  Object invokeMethod(NaturalLanguageMethodMatch match, Method method) {
+    Object objectToInvoke = addAndGetComponent(method.getDeclaringClass());
     return match.invokeMethod(objectToInvoke);
   }
 
@@ -154,21 +172,15 @@ public class Expressive {
     return null;
   }
 
-  <T> T addAndGetComponent(Class<T> componentClass) {
-    //noinspection ConstantIfStatement
-    if (false) {
-      //todo why doesn't this work?
-      if (container.getComponent(componentClass) == null) {
-        container.addComponent(componentClass);
-      }
-      return container.getComponent(componentClass);
+  public <T> T addAndGetComponent(Class<T> componentClass) {
+    return objectFactory.getInstance(componentClass);
+  }
+
+  public void executeEvent(MethodSpecifier eventMethodSpecifier, Reflections reflections) {
+    Set<Method> beforeMethods = eventMethodSpecifier.getMethods(reflections);
+    for (Method beforeMethod : beforeMethods) {
+      ReflectionUtil.invokeWithArgs(beforeMethod, addAndGetComponent(beforeMethod.getDeclaringClass()));
     }
-    if (!addedComponents.containsKey(componentClass)) {
-      container.addComponent(componentClass);
-      addedComponents.put(componentClass, container.getComponent(componentClass));
-    }
-    //noinspection unchecked
-    return (T) addedComponents.get(componentClass);
   }
 
   /**

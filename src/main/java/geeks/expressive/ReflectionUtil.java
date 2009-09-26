@@ -19,22 +19,30 @@ class ReflectionUtil {
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
       LOGGER.log(DEBUG_LEVEL, "invoking " + method + " on " + instance + " with args " + Arrays.asList(args));
     }
+    String message = "calling " + method + " on " + instance + " with " + Arrays.asList(args);
     try {
       return method.invoke(instance, args);
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
+      throw new IllegalStateException(message, e);
     } catch (InvocationTargetException e) {
-      throw toIllegalStateException(e);
+      throw toIllegalStateException(message, e);
     }
   }
 
-  private static IllegalStateException toIllegalStateException(InvocationTargetException exception) {
+  private static IllegalStateException toIllegalStateException(String message, InvocationTargetException exception) {
     if (exception.getCause() instanceof Error) {
       throw (Error) exception.getCause();
     }
     else if (exception.getCause() instanceof RuntimeException) {
-      throw (RuntimeException) exception.getCause();
+      if (exception.getCause() instanceof IllegalArgumentException) {
+        IllegalArgumentException wrapper = new IllegalArgumentException(exception.getCause().getMessage() + ": " + message);
+        wrapper.initCause(exception.getCause());
+        throw wrapper;
+      }
+      else {
+        throw (RuntimeException) exception.getCause();
+      }
     }
-    return new IllegalStateException(exception);
+    return new IllegalStateException(message, exception);
   }
 }

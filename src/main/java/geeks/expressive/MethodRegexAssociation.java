@@ -11,7 +11,7 @@ import java.util.Collections;
  *
  * @author pabstec
  */
-public interface MethodRegexAssociation {
+public interface MethodRegexAssociation extends MethodSpecifier {
   MethodRegexAssociation NONE = new MethodRegexAssociation() {
     public String findRegex(Method method) {
       return null;
@@ -35,10 +35,4 @@ public interface MethodRegexAssociation {
    */
   String toString();
 
-  /**
-   * Gets the methods found within the Reflections that are associated.
-   * @param reflections the Reflections
-   * @return the methods
-   */
-  Set<Method> getMethods(Reflections reflections);
 }
