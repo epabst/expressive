@@ -16,15 +16,17 @@ public class TestCucumberSupport {
   @Test
   public void shouldSupportCucumber() throws IOException {
     StringWriter stringWriter = new StringWriter();
-    JCucumber cucumber = new JCucumber(stringWriter);
-    ResultPublisher resultPublisher = cucumber.run(getClass().getResource("features/Addition.feature"));
+    ResultPublisher resultPublisher = new ResultPublisher(stringWriter);
+    JCucumber cucumber = new JCucumber(resultPublisher);
+    cucumber.run(getClass().getResource("features/Addition.feature"));
     System.out.println(stringWriter.toString());
-    assertEquals(resultPublisher.getTestCount(), 2);
-    assertEquals(resultPublisher.getFailedCount(), 0);
+    assertEquals(resultPublisher.getTestCount(), 3);
+    assertEquals(resultPublisher.getFailedCount(), 1);
     String output = stringWriter.toString();
     assertSubstring(output, "Feature: Addition Using the Calculator");
     assertSubstring(output, "Scenario: 1+1");
     assertSubstring(output, "Then the result should be \"3\"");
+    assertSubstring(output, "FAILED:    Then the result should be \"1\"");
   }
 
   private void assertSubstring(String string, String expectedSubstring) {

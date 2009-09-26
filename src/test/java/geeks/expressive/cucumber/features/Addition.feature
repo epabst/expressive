@@ -14,3 +14,9 @@ Feature: Addition Using the Calculator
     And "2" is entered
     When I push "+"
     Then the result should be "3"
+
+  Scenario: intentionally expect wrong answer
+    Given "4" is entered
+    And "3" is entered
+    When I push "+"
+    Then the result should be "1"

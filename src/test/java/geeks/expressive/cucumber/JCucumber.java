@@ -23,24 +23,19 @@ import geeks.expressive.cucumber.steps.CalculatorSteps;
  */
 public class JCucumber {
   private static final AnnotationMethodRegexAssociation COMMAND_ASSOCIATION = new AnnotationMethodRegexAssociation(Command.class);
-  private final Writer outputWriter;
+  private final ResultPublisher resultPublisher;
 
-  public JCucumber(Writer outputWriter) {
-    this.outputWriter = outputWriter;
+  public JCucumber(ResultPublisher resultPublisher) {
+    this.resultPublisher = resultPublisher;
   }
 
-  public ResultPublisher run(URL featureResource) throws IOException {
+  public void run(URL featureResource) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(featureResource.openStream(), "UTF-8"));
     ObjectFactory objectFactory = new ObjectFactory();
-    ResultPublisher resultPublisher = new ResultPublisher(outputWriter);
     objectFactory.addInstance(resultPublisher);
-    Expressive expressive = new Expressive(objectFactory);
-    Reflections internalCucumberReflections = Expressive.toReflections(Parser.class);
-    expressive.execute(reader, COMMAND_ASSOCIATION, new AnnotationMethodRegexAssociation(Transform.class), internalCucumberReflections);
-    Parser parser = objectFactory.getInstance(Parser.class);
-    parser.setMode(Mode.IN_FEATURE);
-    parser.setMode(Mode.NONE);
-    return resultPublisher;
+    new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
+            Expressive.toReflections(Parser.class));
+    objectFactory.getInstance(Parser.class).finished();
   }
 
   public static class Parser {
@@ -48,6 +43,7 @@ public class JCucumber {
     private Mode mode = Mode.NONE;
     private final ResultPublisher resultPublisher;
     private final Reflections reflections;
+    private int stepFailedCountForScenario;
     private static final AnnotationMethodRegexAssociation GIVEN_ASSOCIATION = new AnnotationMethodRegexAssociation(Given.class);
     private static final AnnotationMethodRegexAssociation WHEN_ASSOCIATION = new AnnotationMethodRegexAssociation(When.class);
     private static final AnnotationMethodRegexAssociation THEN_ASSOCIATION = new AnnotationMethodRegexAssociation(Then.class);
@@ -61,7 +57,15 @@ public class JCucumber {
 
     private void setMode(Mode mode) {
       if (this.mode == Mode.IN_SCENARIO_AFTER_WHEN && mode == Mode.IN_FEATURE) {
-        resultPublisher.succeeded();
+        if (stepFailedCountForScenario != 0) {
+          resultPublisher.failed();
+        }
+        else {
+          resultPublisher.succeeded();
+        }
+      }
+      else if (this.mode == Mode.IN_FEATURE && mode == Mode.IN_SCENARIO_BEFORE_WHEN) {
+        stepFailedCountForScenario = 0;
         expressive.executeEvent(BEFORE_SPECIFIER, reflections);
       }
       this.mode = mode;
@@ -74,37 +78,27 @@ public class JCucumber {
       setMode(Mode.IN_FEATURE);
     }
 
-    @Command("^( *Scenario: .*)$")
+    @Command("^(\\s*Scenario: .*)$")
     public void scenario(String scenario) {
       setMode(Mode.IN_FEATURE);
       resultPublisher.startScenario(scenario);
       setMode(Mode.IN_SCENARIO_BEFORE_WHEN);
     }
 
-    @Command("^( *Given (.*))$")
+    @Command("^(\\s*Given (.*))$")
     public void given(String string, String step) {
       assertMode(Mode.IN_SCENARIO_BEFORE_WHEN);
       executeStepAndWriteString(string, step, GIVEN_ASSOCIATION);
-      setMode(Mode.IN_SCENARIO_BEFORE_WHEN);
     }
 
-    private void executeStepAndWriteString(String stepLine, String step, AnnotationMethodRegexAssociation annotationAssociation) {
-      try {
-        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, reflections);
-        resultPublisher.stepPassed(stepLine);
-      } catch (Exception e) {
-        resultPublisher.stepFailed(stepLine, e);
-      }
-    }
-
-    @Command("^( *When (.*))$")
+    @Command("^(\\s*When (.*))$")
     public void when(String string, String step) {
       assertMode(Mode.IN_SCENARIO_BEFORE_WHEN);
       executeStepAndWriteString(string, step, WHEN_ASSOCIATION);
       setMode(Mode.IN_SCENARIO_AFTER_WHEN);
     }
 
-    @Command("^( *Then (.*))$")
+    @Command("^(\\s*Then (.*))$")
     public void then(String string, String step) {
       assertMode(Mode.IN_SCENARIO_AFTER_WHEN);
       executeStepAndWriteString(string, step, THEN_ASSOCIATION);
@@ -125,14 +119,33 @@ public class JCucumber {
       //do nothing
     }
 
-    private void assertMode(Mode expectedMode) {
-      assertEquals(mode, expectedMode);
-    }
-
     @Command(Expressive.EVERYTHING_ELSE_REGEX)
     public void everythingElse(String line) {
       assertMode(Mode.IN_FEATURE);
       resultPublisher.writeln(line);
+    }
+
+    private void executeStepAndWriteString(String stepLine, String step, AnnotationMethodRegexAssociation annotationAssociation) {
+      try {
+        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, reflections);
+        resultPublisher.stepPassed(stepLine);
+      } catch (Exception e) {
+        stepFailedCountForScenario++;
+        resultPublisher.stepFailed(stepLine, e);
+      } catch (AssertionError e) {
+        stepFailedCountForScenario++;
+        resultPublisher.stepFailed(stepLine, e);
+      }
+    }
+
+    private void assertMode(Mode expectedMode) {
+      assertEquals(mode, expectedMode);
+    }
+
+    private void finished() {
+      setMode(Mode.IN_FEATURE);
+      setMode(Mode.NONE);
+      resultPublisher.finished();
     }
   }
 

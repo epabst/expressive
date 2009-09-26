@@ -19,12 +19,12 @@ public class ResultPublisher {
   }
 
   public void stepPassed(String string) {
-    writeln("PASSED: " + string);
+    writeln("PASSED:" + string);
   }
   
-  public void stepFailed(String string, Exception exception) {
-    writeln("FAILED: " + string);
-    exception.printStackTrace(writer);
+  public void stepFailed(String string, Throwable throwable) {
+    writeln("FAILED:" + string);
+    throwable.printStackTrace(writer);
   }
 
   public void writeln(String string) {
@@ -55,5 +55,10 @@ public class ResultPublisher {
 
   public int getFailedCount() {
     return failedCount;
+  }
+
+  public void finished() {
+    writeln("-----------------------------------------------");
+    writeln("Total tests: " + getTestCount() + "   Failed: " + getFailedCount());
   }
 }
