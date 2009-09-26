@@ -1,7 +1,5 @@
 package geeks.expressive;
 
-import org.reflections.Reflections;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -26,7 +24,7 @@ public class AnnotationMethodSpecifier implements MethodSpecifier {
     return "@" + annotationClass.getSimpleName();
   }
 
-  public Set<Method> getMethods(Reflections reflections) {
-    return reflections.getMethodsAnnotatedWith(annotationClass);
+  public Set<Method> getMethods(Scope scope) {
+    return scope.getMethodsAnnotatedWith(annotationClass);
   }
 }

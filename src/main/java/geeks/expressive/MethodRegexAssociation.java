@@ -1,7 +1,5 @@
 package geeks.expressive;
 
-import org.reflections.Reflections;
-
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.Collections;
@@ -17,7 +15,7 @@ public interface MethodRegexAssociation extends MethodSpecifier {
       return null;
     }
 
-    public Set<Method> getMethods(Reflections reflections) {
+    public Set<Method> getMethods(Scope scope) {
       return Collections.emptySet();
     }
   };

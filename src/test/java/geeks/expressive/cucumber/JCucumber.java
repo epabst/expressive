@@ -1,6 +1,5 @@
 package geeks.expressive.cucumber;
 
-import org.reflections.Reflections;
 import static org.testng.Assert.assertEquals;
 
 import java.net.URL;
@@ -10,10 +9,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import geeks.expressive.Expressive;
-import geeks.expressive.AnnotationMethodRegexAssociation;
-import geeks.expressive.ObjectFactory;
-import geeks.expressive.AnnotationMethodSpecifier;
+import geeks.expressive.*;
 import geeks.expressive.cucumber.steps.CalculatorSteps;
 
 /**
@@ -35,7 +31,7 @@ public class JCucumber {
     ObjectFactory objectFactory = new ObjectFactory();
     objectFactory.addInstance(parser);
     new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
-            Expressive.toReflections(Parser.class));
+            Scopes.asScope(Parser.class));
     parser.finished();
   }
 
@@ -43,7 +39,7 @@ public class JCucumber {
     private final Expressive expressive = new Expressive(new ObjectFactory());
     private Mode mode = Mode.NONE;
     private final ResultPublisher resultPublisher;
-    private final Reflections reflections;
+    private final Scope scope;
     private int stepFailedCountForScenario;
     private static final AnnotationMethodRegexAssociation GIVEN_ASSOCIATION = new AnnotationMethodRegexAssociation(Given.class);
     private static final AnnotationMethodRegexAssociation WHEN_ASSOCIATION = new AnnotationMethodRegexAssociation(When.class);
@@ -52,7 +48,7 @@ public class JCucumber {
     private static final AnnotationMethodSpecifier BEFORE_SPECIFIER = new AnnotationMethodSpecifier(Before.class);
 
     private Parser(ResultPublisher resultPublisher) {
-      reflections = Expressive.toReflections(CalculatorSteps.class.getPackage());
+      scope = Scopes.asScope(CalculatorSteps.class.getPackage());
       this.resultPublisher = resultPublisher;
     }
 
@@ -67,7 +63,7 @@ public class JCucumber {
       }
       else if (this.mode == Mode.IN_FEATURE && mode == Mode.IN_SCENARIO_BEFORE_WHEN) {
         stepFailedCountForScenario = 0;
-        expressive.executeEvent(BEFORE_SPECIFIER, reflections);
+        expressive.executeEvent(BEFORE_SPECIFIER, scope);
       }
       this.mode = mode;
     }
@@ -128,7 +124,7 @@ public class JCucumber {
 
     private void executeStepAndWriteString(String stepLine, String step, AnnotationMethodRegexAssociation annotationAssociation) {
       try {
-        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, reflections);
+        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, scope);
         resultPublisher.stepPassed(stepLine);
       } catch (Exception e) {
         stepFailedCountForScenario++;

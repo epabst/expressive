@@ -1,7 +1,5 @@
 package geeks.expressive;
 
-import org.reflections.Reflections;
-
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -12,9 +10,9 @@ import java.util.Set;
  */
 public interface MethodSpecifier {
   /**
-   * Gets the methods found within the Reflections that are associated.
-   * @param reflections the Reflections
+   * Gets the methods found within the Scope that are associated.
+   * @param scope the Scope
    * @return the methods
    */
-  Set<Method> getMethods(Reflections reflections);
+  Set<Method> getMethods(Scope scope);
 }

@@ -1,11 +1,5 @@
 package geeks.expressive;
 
-import org.reflections.Reflections;
-import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.util.AbstractConfiguration;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.FilterBuilder;
-
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,24 +26,24 @@ public class Expressive {
     this.objectFactory = objectFactory;
   }
 
-  public void execute(BufferedReader reader, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) throws IOException {
+  public void execute(BufferedReader reader, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) throws IOException {
     String string;
     while ((string = reader.readLine()) != null) {
-      execute(string, regexAssociation, transformRegexAssociation, reflections);
+      execute(string, regexAssociation, transformRegexAssociation, scope);
     }
   }
 
-  public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
-    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexAssociation, transformRegexAssociation, reflections);
+  public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
+    NaturalLanguageMethodMatch match = findMatchingNaturalLanguageMethod(languageString, regexAssociation, transformRegexAssociation, scope);
     if (match != null) {
       return invokeMethod(match);
     }
     throw new IllegalStateException("No method with " + regexAssociation
-            + " found for '" + languageString + "' in " + reflections);
+            + " found for '" + languageString + "' in " + scope);
   }
 
-  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, scope);
     NaturalLanguageMethodMatch defaultMatch = null;
     for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
       NaturalLanguageMethodMatch match = match(naturalLanguageMethod, languageString);
@@ -78,45 +72,29 @@ public class Expressive {
     return method.getPattern().pattern().equals(EVERYTHING_ELSE_REGEX);
   }
 
-  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
-    List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, reflections);
+  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
+    List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, scope);
     List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
     if (naturalLanguageMethods == null) {
-      naturalLanguageMethods = findNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
+      naturalLanguageMethods = findNaturalLanguageMethods(regexAssociation, transformRegexAssociation, scope);
       cachedNaturalLanguageMethodsByClasses.put(key, naturalLanguageMethods);
     }
     return naturalLanguageMethods;
   }
 
-  private List<NaturalLanguageMethod> findNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+  private List<NaturalLanguageMethod> findNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
     List<NaturalLanguageMethod> naturalLanguageMethods = new LinkedList<NaturalLanguageMethod>();
-    for (Method method : regexAssociation.getMethods(reflections)) {
-      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, regexAssociation, transformRegexAssociation, reflections);
+    for (Method method : regexAssociation.getMethods(scope)) {
+      NaturalLanguageMethod naturalLanguageMethod = calculateNaturalLanguageMethod(method, regexAssociation, transformRegexAssociation, scope);
       if (naturalLanguageMethod != null) {
         naturalLanguageMethods.add(naturalLanguageMethod);
       }
     }
     if (LOGGER.isLoggable(DEBUG_LEVEL)) {
       LOGGER.log(DEBUG_LEVEL, "Found methods with " + regexAssociation + " in "
-              + reflections + ": " + naturalLanguageMethods);
+              + scope + ": " + naturalLanguageMethods);
     }
     return naturalLanguageMethods;
-  }
-
-  public static Reflections toReflections(final Class<?> matchingClass) {
-    return new Reflections(new AbstractConfiguration() {{
-      setFilter(new FilterBuilder().include(".*"));
-      setUrls(Arrays.asList(ClasspathHelper.getUrlForClass(matchingClass)));
-      setScanners(new MethodAnnotationsScanner());
-    }});
-  }
-
-  public static Reflections toReflections(final Package matchingPackage) {
-    return new Reflections(new AbstractConfiguration() {{
-      setFilter(new FilterBuilder().include(".*"));
-      setUrls(ClasspathHelper.getUrlsForPackagePrefix(matchingPackage.getName()));
-      setScanners(new MethodAnnotationsScanner());
-    }});
   }
 
   /**
@@ -124,10 +102,10 @@ public class Expressive {
    * @param method the Method
    * @param regexAssociation a matcher for candidate methods
    * @param transformRegexAssociation a matcher for methods that can transform values
-   * @param reflections which classes to consider
+   * @param scope which classes to consider
    * @return a NaturalLanguageMethod
    */
-  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+  private NaturalLanguageMethod calculateNaturalLanguageMethod(Method method, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
     if (LOGGER.isLoggable(Level.FINEST)) {
       LOGGER.log(Level.FINEST, "Seeing if method " + method + " has " + regexAssociation);
     }
@@ -135,19 +113,19 @@ public class Expressive {
     if (regex == null) {
       return null;
     }
-    return toNaturalLanguageMethod(method, regex, transformRegexAssociation, reflections);
+    return toNaturalLanguageMethod(method, regex, transformRegexAssociation, scope);
   }
 
-  private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+  private NaturalLanguageMethod toNaturalLanguageMethod(Method method, String regexWithTokens, MethodRegexAssociation transformRegexAssociation, Scope scope) {
     Pattern pattern = Pattern.compile(regexWithTokens);
-    return new NaturalLanguageMethod(pattern, method, createArgumentConverters(method, transformRegexAssociation, reflections));
+    return new NaturalLanguageMethod(pattern, method, createArgumentConverters(method, transformRegexAssociation, scope));
   }
 
-  private List<ArgumentConverter> createArgumentConverters(Method method, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+  private List<ArgumentConverter> createArgumentConverters(Method method, MethodRegexAssociation transformRegexAssociation, Scope scope) {
     Class<?>[] parameterTypes = method.getParameterTypes();
     List<ArgumentConverter> converters = new ArrayList<ArgumentConverter>(parameterTypes.length);
     for (Class<?> parameterType : parameterTypes) {
-      converters.add(new TransformArgumentConverter(parameterType, this, transformRegexAssociation, reflections));
+      converters.add(new TransformArgumentConverter(parameterType, this, transformRegexAssociation, scope));
     }
     return converters;
   }
@@ -176,8 +154,8 @@ public class Expressive {
     return objectFactory.getInstance(componentClass);
   }
 
-  public void executeEvent(MethodSpecifier eventMethodSpecifier, Reflections reflections) {
-    Set<Method> beforeMethods = eventMethodSpecifier.getMethods(reflections);
+  public void executeEvent(MethodSpecifier eventMethodSpecifier, Scope scope) {
+    Set<Method> beforeMethods = eventMethodSpecifier.getMethods(scope);
     for (Method beforeMethod : beforeMethods) {
       ReflectionUtil.invokeWithArgs(beforeMethod, addAndGetComponent(beforeMethod.getDeclaringClass()));
     }
