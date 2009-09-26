@@ -31,14 +31,15 @@ public class JCucumber {
 
   public void run(URL featureResource) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(featureResource.openStream(), "UTF-8"));
+    Parser parser = new Parser(resultPublisher);
     ObjectFactory objectFactory = new ObjectFactory();
-    objectFactory.addInstance(resultPublisher);
+    objectFactory.addInstance(parser);
     new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
             Expressive.toReflections(Parser.class));
-    objectFactory.getInstance(Parser.class).finished();
+    parser.finished();
   }
 
-  public static class Parser {
+  private static class Parser {
     private final Expressive expressive = new Expressive(new ObjectFactory());
     private Mode mode = Mode.NONE;
     private final ResultPublisher resultPublisher;
@@ -50,7 +51,7 @@ public class JCucumber {
     private static final AnnotationMethodRegexAssociation TRANSFORM_ASSOCIATION = new AnnotationMethodRegexAssociation(Transform.class);
     private static final AnnotationMethodSpecifier BEFORE_SPECIFIER = new AnnotationMethodSpecifier(Before.class);
 
-    public Parser(ResultPublisher resultPublisher) {
+    private Parser(ResultPublisher resultPublisher) {
       reflections = Expressive.toReflections(CalculatorSteps.class.getPackage());
       this.resultPublisher = resultPublisher;
     }
@@ -149,10 +150,9 @@ public class JCucumber {
     }
   }
 
-
   @Target({ElementType.METHOD})
   @Retention(RetentionPolicy.RUNTIME)
-  public static @interface Command {
+  private static @interface Command {
     /**
      * The regular expression to match against for the target method to be used.
      * @return the regular expression string

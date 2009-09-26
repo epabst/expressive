@@ -20,6 +20,9 @@ class ReflectionUtil {
       LOGGER.log(DEBUG_LEVEL, "invoking " + method + " on " + instance + " with args " + Arrays.asList(args));
     }
     String message = "calling " + method + " on " + instance + " with " + Arrays.asList(args);
+    if (!method.isAccessible()) {
+      method.setAccessible(true);
+    }
     try {
       return method.invoke(instance, args);
     } catch (IllegalAccessException e) {
