@@ -49,6 +49,21 @@ public class Expressive {
             + " found for '" + languageString + "' in " + reflections);
   }
 
+  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
+    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
+    NaturalLanguageMethodMatch match = null;
+    for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
+      match = match(naturalLanguageMethod, languageString);
+      if (match != null) {
+        if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod);
+        }
+        break;
+      }
+    }
+    return match;
+  }
+
   public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
     List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, reflections);
     List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
@@ -126,21 +141,6 @@ public class Expressive {
   Object invokeMethod(NaturalLanguageMethodMatch match) {
     Object objectToInvoke = addAndGetComponent(match.getNaturalLanguageMethod().getMethod().getDeclaringClass());
     return match.invokeMethod(objectToInvoke);
-  }
-
-  NaturalLanguageMethodMatch findMatchingNaturalLanguageMethod(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Reflections reflections) {
-    List<NaturalLanguageMethod> naturalLanguageMethods = getNaturalLanguageMethods(regexAssociation, transformRegexAssociation, reflections);
-    NaturalLanguageMethodMatch match = null;
-    for (NaturalLanguageMethod naturalLanguageMethod : naturalLanguageMethods) {
-      match = match(naturalLanguageMethod, languageString);
-      if (match != null) {
-        if (LOGGER.isLoggable(DEBUG_LEVEL)) {
-          LOGGER.log(DEBUG_LEVEL, "Found match for '" + languageString + "': " + naturalLanguageMethod);
-        }
-        break;
-      }
-    }
-    return match;
   }
 
   private NaturalLanguageMethodMatch match(NaturalLanguageMethod naturalLanguageMethod, String inputString) {
