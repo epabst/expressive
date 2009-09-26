@@ -5,6 +5,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * A test to show support for doing what Cucumber does.
@@ -14,14 +15,16 @@ import java.io.IOException;
 public class TestCucumberSupport {
   @Test
   public void shouldSupportCucumber() throws IOException {
-    JCucumber cucumber = new JCucumber();
-    cucumber.run(getClass().getResource("features/Addition.feature"));
-    CucumberResult result = cucumber.getResult(); 
-    assertEquals(result.getTestCount(), 2);
-    assertEquals(result.getFailedCount(), 0);
-    assertSubstring(result.getOutput(), "Feature: Addition Using the Calculator");
-    assertSubstring(result.getOutput(), "Scenario: 1+1");
-    assertSubstring(result.getOutput(), "Then the result should be \"3\"");
+    StringWriter stringWriter = new StringWriter();
+    JCucumber cucumber = new JCucumber(stringWriter);
+    ResultPublisher resultPublisher = cucumber.run(getClass().getResource("features/Addition.feature"));
+    System.out.println(stringWriter.toString());
+    assertEquals(resultPublisher.getTestCount(), 2);
+    assertEquals(resultPublisher.getFailedCount(), 0);
+    String output = stringWriter.toString();
+    assertSubstring(output, "Feature: Addition Using the Calculator");
+    assertSubstring(output, "Scenario: 1+1");
+    assertSubstring(output, "Then the result should be \"3\"");
   }
 
   private void assertSubstring(String string, String expectedSubstring) {
