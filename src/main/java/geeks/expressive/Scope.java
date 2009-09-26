@@ -10,5 +10,10 @@ import java.util.Set;
  * @author pabstec
  */
 public interface Scope {
+  /**
+   * Finds all the methods with the given Annotation class.
+   * @param annotationClass the Annotation class
+   * @return the set of Methods
+   */
   Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotationClass);
 }

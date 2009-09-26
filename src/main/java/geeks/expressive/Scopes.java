@@ -33,7 +33,7 @@ public class Scopes {
     }}));
   }
 
-  public static Scope asScope(final Reflections reflections) {
+  private static Scope asScope(final Reflections reflections) {
     return new Scope() {
       public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotationClass) {
         return reflections.getMethodsAnnotatedWith(annotationClass);
