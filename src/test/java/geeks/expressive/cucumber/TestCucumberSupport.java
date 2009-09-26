@@ -7,6 +7,9 @@ import static org.testng.Assert.assertTrue;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import geeks.expressive.Scopes;
+import geeks.expressive.cucumber.steps.CalculatorSteps;
+
 /**
  * A test to show support for doing what Cucumber does.
  *
@@ -18,7 +21,7 @@ public class TestCucumberSupport {
     StringWriter stringWriter = new StringWriter();
     ResultPublisher resultPublisher = new ResultPublisher(stringWriter);
     JCucumber cucumber = new JCucumber(resultPublisher);
-    cucumber.run(getClass().getResource("features/Addition.feature"));
+    cucumber.run(getClass().getResource("features/Addition.feature"), Scopes.asScope(CalculatorSteps.class.getPackage()));
     System.out.println(stringWriter.toString());
     assertEquals(resultPublisher.getTestCount(), 3);
     assertEquals(resultPublisher.getFailedCount(), 1);

@@ -10,7 +10,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import geeks.expressive.*;
-import geeks.expressive.cucumber.steps.CalculatorSteps;
 
 /**
  * A simplistic implementation of Cucumber.
@@ -25,9 +24,9 @@ public class JCucumber {
     this.resultPublisher = resultPublisher;
   }
 
-  public void run(URL featureResource) throws IOException {
+  public void run(URL featureResource, Scope stepsScope) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(featureResource.openStream(), "UTF-8"));
-    Parser parser = new Parser(resultPublisher);
+    Parser parser = new Parser(resultPublisher, stepsScope);
     ObjectFactory objectFactory = new ObjectFactory();
     objectFactory.addInstance(parser);
     new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
@@ -39,7 +38,7 @@ public class JCucumber {
     private final Expressive expressive = new Expressive(new ObjectFactory());
     private Mode mode = Mode.NONE;
     private final ResultPublisher resultPublisher;
-    private final Scope scope;
+    private final Scope stepsScope;
     private int stepFailedCountForScenario;
     private static final AnnotationMethodRegexAssociation GIVEN_ASSOCIATION = new AnnotationMethodRegexAssociation(Given.class);
     private static final AnnotationMethodRegexAssociation WHEN_ASSOCIATION = new AnnotationMethodRegexAssociation(When.class);
@@ -47,8 +46,8 @@ public class JCucumber {
     private static final AnnotationMethodRegexAssociation TRANSFORM_ASSOCIATION = new AnnotationMethodRegexAssociation(Transform.class);
     private static final AnnotationMethodSpecifier BEFORE_SPECIFIER = new AnnotationMethodSpecifier(Before.class);
 
-    private Parser(ResultPublisher resultPublisher) {
-      scope = Scopes.asScope(CalculatorSteps.class.getPackage());
+    private Parser(ResultPublisher resultPublisher, Scope stepsScope) {
+      this.stepsScope = stepsScope;
       this.resultPublisher = resultPublisher;
     }
 
@@ -63,7 +62,7 @@ public class JCucumber {
       }
       else if (this.mode == Mode.IN_FEATURE && mode == Mode.IN_SCENARIO_BEFORE_WHEN) {
         stepFailedCountForScenario = 0;
-        expressive.executeEvent(BEFORE_SPECIFIER, scope);
+        expressive.executeEvent(BEFORE_SPECIFIER, stepsScope);
       }
       this.mode = mode;
     }
@@ -124,7 +123,7 @@ public class JCucumber {
 
     private void executeStepAndWriteString(String stepLine, String step, AnnotationMethodRegexAssociation annotationAssociation) {
       try {
-        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, scope);
+        expressive.execute(step, annotationAssociation, TRANSFORM_ASSOCIATION, stepsScope);
         resultPublisher.stepPassed(stepLine);
       } catch (Exception e) {
         stepFailedCountForScenario++;
