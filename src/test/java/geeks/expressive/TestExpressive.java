@@ -21,92 +21,92 @@ import java.text.DateFormat;
  */
 ///CLOVER:OFF
 public class TestExpressive {
-  private Expressive executer;
+  private Expressive expressive;
 
   @BeforeMethod
   private void setup() {
-    executer = new Expressive(new DefaultObjectFactory());
+    expressive = new Expressive(new DefaultObjectFactory());
   }
 
   @Test
   public void testIgnored() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
     List<String> plannedIgnoredLines = Arrays.asList("blah blah blah", "fee fi fo fum");
     for (String plannedIgnoredLine : plannedIgnoredLines) {
-      executer.execute(plannedIgnoredLine, new AnnotationMethodRegexAssociation(Command.class),
+      expressive.execute(plannedIgnoredLine, new AnnotationMethodRegexAssociation(Command.class),
               new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
     }
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getIgnoredLines(), plannedIgnoredLines);
   }
 
   @Test
   public void testParseWithTransform() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
   public void testParseWithTransformToSubclass() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say size of [a, b, c]", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say size of [a, b, c]", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "3");
   }
 
   @Test
   public void testParseWithTransformToSubclass2() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say size of {a, b, c, d}", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say size of {a, b, c, d}", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "4");
   }
 
   @Test
   public void testParseWithTransformUsingSearchPath() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say date 10/21/2008", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say date 10/21/2008", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(TestExpressive.class.getPackage()));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "October 21, 2008");
   }
 
   @Test
   public void testParseAvoidsWrongTransform() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say \"hello\" 10 times (as string)", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say \"hello\" 10 times (as string)", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hello, hello, hello, hello, hello, hello, hello, hello, hello, hello");
   }
 
   @Test
   public void testParseWithTransform_AttemptingCircular() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say \"circular1\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say \"circular1\" 10 times", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2, circular2");
   }
 
   @Test
   public void testParseWithIllegalAnnotation() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
     try {
-      executer.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(TagAnnotation.class),
+      expressive.execute("say \"hello\" 10 times", new AnnotationMethodRegexAssociation(TagAnnotation.class),
               new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
       fail("expected exception");
     }
@@ -123,11 +123,11 @@ public class TestExpressive {
 
   @Test
   public void testParseWithAlternateTransform() {
-    assertNotNull("executer should have been set", executer);
+    assertNotNull("expressive should have been set", expressive);
 
-    executer.execute("say \"hi\" one time", new AnnotationMethodRegexAssociation(Command.class),
+    expressive.execute("say \"hi\" one time", new AnnotationMethodRegexAssociation(Command.class),
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
-    Talker talker = executer.addAndGetComponent(Talker.class);
+    Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hi");
   }
 

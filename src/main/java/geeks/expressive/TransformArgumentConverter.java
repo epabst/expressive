@@ -12,12 +12,12 @@ import java.lang.reflect.Method;
  */
 class TransformArgumentConverter implements ArgumentConverter {
   private static final Logger LOGGER = Logger.getLogger(TransformArgumentConverter.class.getName());
-  private final Expressive executer;
+  private final Expressive expressive;
   private final MethodRegexAssociation transformRegexAssociation;
   private final Scope scope;
 
-  public TransformArgumentConverter(final Class<?> targetType, Expressive executer, final MethodRegexAssociation transformRegexAssociation, Scope scope) {
-    this.executer = executer;
+  public TransformArgumentConverter(final Class<?> targetType, Expressive expressive, final MethodRegexAssociation transformRegexAssociation, Scope scope) {
+    this.expressive = expressive;
     this.scope = scope;
     this.transformRegexAssociation = new MethodRegexAssociation() {
       public String findRegex(Method method) {
@@ -38,13 +38,13 @@ class TransformArgumentConverter implements ArgumentConverter {
 
   public Object convertArgument(String argString, final NaturalLanguageMethod naturalLanguageMethod, int index) {
     MethodRegexAssociation noncircularRegexAssociation = new NoncircularRegexAssociation(naturalLanguageMethod, transformRegexAssociation);
-    Expressive.NaturalLanguageMethodMatch match = executer.findMatchingNaturalLanguageMethod(
+    Expressive.NaturalLanguageMethodMatch match = expressive.findMatchingNaturalLanguageMethod(
             argString, transformRegexAssociation, noncircularRegexAssociation, scope);
     if (match != null && !match.getNaturalLanguageMethod().equals(naturalLanguageMethod)) {
       if (LOGGER.isLoggable(Level.FINE)) {
         LOGGER.log(Level.FINE, "Converting " + argString + " using " + match.getNaturalLanguageMethod().getMethod());
       }
-      return executer.invokeMethod(match);
+      return expressive.invokeMethod(match);
     } else {
       return argString;
     }
