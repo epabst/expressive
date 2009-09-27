@@ -27,7 +27,7 @@ public class JCucumber {
   public void run(URL featureResource, Scope stepsScope) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(featureResource.openStream(), "UTF-8"));
     Parser parser = new Parser(resultPublisher, stepsScope);
-    ObjectFactory objectFactory = new ObjectFactory();
+    ObjectFactory objectFactory = new DefaultObjectFactory();
     objectFactory.addInstance(parser);
     new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
             Scopes.asScope(Parser.class));
@@ -35,7 +35,7 @@ public class JCucumber {
   }
 
   private static class Parser {
-    private final Expressive expressive = new Expressive(new ObjectFactory());
+    private final Expressive expressive = new Expressive(new DefaultObjectFactory());
     private Mode mode = Mode.NONE;
     private final ResultPublisher resultPublisher;
     private final Scope stepsScope;

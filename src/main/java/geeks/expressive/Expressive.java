@@ -72,7 +72,7 @@ public class Expressive {
     return method.getPattern().pattern().equals(EVERYTHING_ELSE_REGEX);
   }
 
-  public List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
+  private List<NaturalLanguageMethod> getNaturalLanguageMethods(MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
     List<Object> key = Arrays.asList(regexAssociation, transformRegexAssociation, scope);
     List<NaturalLanguageMethod> naturalLanguageMethods = cachedNaturalLanguageMethodsByClasses.get(key);
     if (naturalLanguageMethods == null) {
@@ -150,7 +150,7 @@ public class Expressive {
     return null;
   }
 
-  public <T> T addAndGetComponent(Class<T> componentClass) {
+  <T> T addAndGetComponent(Class<T> componentClass) {
     return objectFactory.getInstance(componentClass);
   }
 

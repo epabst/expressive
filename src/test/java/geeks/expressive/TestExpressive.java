@@ -25,7 +25,7 @@ public class TestExpressive {
 
   @BeforeMethod
   private void setup() {
-    executer = new Expressive(new ObjectFactory());
+    executer = new Expressive(new DefaultObjectFactory());
   }
 
   @Test
