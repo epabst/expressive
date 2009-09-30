@@ -4,9 +4,9 @@
   <groupId>geeks</groupId>
   <name>Expressive</name>
   <artifactId>expressive</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
   <packaging>jar</packaging>
-  <url>http://familysearch.org</url>
+  <url>http://github.com/epabst/expressive</url>
   <dependencies>
     <dependency>
       <groupId>org.picocontainer</groupId>
