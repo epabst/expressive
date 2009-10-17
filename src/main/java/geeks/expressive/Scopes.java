@@ -5,12 +5,16 @@ import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.AbstractConfiguration;
 import org.reflections.util.FilterBuilder;
 import org.reflections.util.ClasspathHelper;
+import org.reflections.util.Utils;
+import static org.reflections.util.DescriptorHelper.qNameToResourceName;
 
 import java.util.Arrays;
 import java.util.Set;
 import java.util.List;
+import java.util.Collection;
 import java.lang.reflect.Method;
 import java.lang.annotation.Annotation;
+import java.net.URL;
 
 /**
  * A factory for scopes.
@@ -19,17 +23,19 @@ import java.lang.annotation.Annotation;
  */
 public class Scopes {
   public static Scope asScope(final Class<?> aClass) {
-    return asScope(Arrays.asList(aClass.getName()), new Reflections(new AbstractConfiguration() {{
-      setFilter(new FilterBuilder().include(".*"));
-      setUrls(Arrays.asList(ClasspathHelper.getUrlForClass(aClass)));
-      setScanners(new MethodAnnotationsScanner());
-    }}));
+    String classResourceName = qNameToResourceName(aClass.getName()) + ".class";
+    final List<URL> urls = Arrays.asList(Utils.getEffectiveClassLoader().getResource(classResourceName));
+    return asScope(Arrays.asList(aClass.getName()), urls);
   }
 
   public static Scope asScope(final Package aPackage) {
-    return asScope(Arrays.asList(aPackage.getName()), new Reflections(new AbstractConfiguration() {{
+    return asScope(Arrays.asList(aPackage.getName()), ClasspathHelper.getUrlsForPackagePrefix(aPackage.getName()));
+  }
+
+  private static Scope asScope(List<String> pathsForDescription, final Collection<URL> urls) {
+    return asScope(pathsForDescription, new Reflections(new AbstractConfiguration() {{
       setFilter(new FilterBuilder().include(".*"));
-      setUrls(ClasspathHelper.getUrlsForPackagePrefix(aPackage.getName()));
+      setUrls(urls);
       setScanners(new MethodAnnotationsScanner());
     }}));
   }
