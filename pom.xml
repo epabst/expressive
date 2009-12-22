@@ -7,6 +7,10 @@
   <version>0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
   <url>http://github.com/epabst/expressive</url>
+  <scm>
+    <connection>scm:git:git://github.com/epabst/expressive.git</connection>
+    <url>scm:git:https://github.com/epabst/expressive</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.picocontainer</groupId>
@@ -86,6 +90,17 @@
             <source>1.5</source>
             <target>1.5</target>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-scm-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.2</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
