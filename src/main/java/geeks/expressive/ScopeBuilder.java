@@ -22,6 +22,9 @@ public class ScopeBuilder {
   private final Map<URL, String> descriptionByUrl = new LinkedHashMap<URL, String>();
 
   public Scope build() {
+    if (descriptionByUrl.isEmpty()) {
+      return Scope.EMPTY;
+    }
     return asScope(new ArrayList<String>(descriptionByUrl.values()), descriptionByUrl.keySet());
   }
 
