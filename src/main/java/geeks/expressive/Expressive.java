@@ -155,9 +155,9 @@ public class Expressive {
   }
 
   public void executeEvent(MethodSpecifier eventMethodSpecifier, Scope scope) {
-    Set<Method> beforeMethods = eventMethodSpecifier.getMethods(scope);
-    for (Method beforeMethod : beforeMethods) {
-      ReflectionUtil.invokeWithArgs(beforeMethod, addAndGetComponent(beforeMethod.getDeclaringClass()));
+    Set<Method> eventMethods = eventMethodSpecifier.getMethods(scope);
+    for (Method eventMethod : eventMethods) {
+      ReflectionUtil.invokeWithArgs(eventMethod, addAndGetComponent(eventMethod.getDeclaringClass()));
     }
   }
 
