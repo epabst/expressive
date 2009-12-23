@@ -4,7 +4,7 @@
   <groupId>geeks.expressive</groupId>
   <name>Expressive</name>
   <artifactId>expressive</artifactId>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.5</version>
   <packaging>jar</packaging>
   <url>http://github.com/epabst/expressive</url>
   <scm>
