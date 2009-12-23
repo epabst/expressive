@@ -67,15 +67,16 @@ public class JCucumber {
       this.mode = mode;
     }
 
+    //test using a non-public method
     @Command("^(Feature: .*)$")
-    public void feature(String feature) {
+    void feature(String feature) {
       assertMode(Mode.NONE);
       resultPublisher.writeln(feature);
       setMode(Mode.IN_FEATURE);
     }
 
     @Command("^(\\s*Scenario: .*)$")
-    public void scenario(String scenario) {
+    void scenario(String scenario) {
       setMode(Mode.IN_FEATURE);
       resultPublisher.startScenario(scenario);
       setMode(Mode.IN_SCENARIO_BEFORE_WHEN);

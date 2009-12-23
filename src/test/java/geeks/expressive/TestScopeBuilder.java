@@ -8,6 +8,7 @@ import static org.testng.Assert.assertSame;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Arrays;
 import java.lang.reflect.Method;
 
 /**
@@ -22,6 +23,20 @@ public class TestScopeBuilder {
     Scope scope = new ScopeBuilder().build();
     assertEquals(scope.getMethodsAnnotatedWith(Test.class).size(), 0);
     assertSame(scope, Scope.EMPTY);
+  }
+
+  @Test
+  public void shouldSupportIndividualClassesInsideOfJars() {
+    //it's ok to change these classes as long as they have deprecated methods
+    Class[] classesWithDeprecatedMethods = {Thread.class, String.class};
+
+    ScopeBuilder scopeBuilder = new ScopeBuilder();
+    for (Class classWithDeprecatedMethods : classesWithDeprecatedMethods) {
+      scopeBuilder.with(classWithDeprecatedMethods);
+    }
+    Scope scope = scopeBuilder.build();
+    assertEquals(getClasses(scope.getMethodsAnnotatedWith(Deprecated.class)),
+            new HashSet<Class>(Arrays.asList(classesWithDeprecatedMethods)));
   }
 
   @Test

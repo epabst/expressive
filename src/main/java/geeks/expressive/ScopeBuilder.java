@@ -1,11 +1,13 @@
 package geeks.expressive;
 
 import org.reflections.util.ClasspathHelper;
-import static org.reflections.util.DescriptorHelper.qNameToResourceName;
-import org.reflections.util.Utils;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.Set;
+import java.util.HashSet;
+import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
 
 /**
  * A builder for a Scope.
@@ -13,16 +15,35 @@ import java.util.Collection;
  * @author pabstec
  */
 public class ScopeBuilder {
+  private final Set<ClassScope> classScopes = new HashSet<ClassScope>(); 
   private final URLScopeBuilder urlScopeBuilder = new URLScopeBuilder();
-
+  
   public Scope build() {
-    return urlScopeBuilder.build();
+    final Scope urlScope = urlScopeBuilder.build();
+    if (classScopes.isEmpty()) {
+      return urlScope;
+    }
+    return new Scope() {
+      @Override
+      public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotationClass) {
+        Set<Method> methods = new HashSet<Method>(urlScope.getMethodsAnnotatedWith(annotationClass));
+        for (ClassScope classScope : classScopes) {
+          methods.addAll(classScope.getMethodsAnnotatedWith(annotationClass));
+        }
+        return methods;
+      }
+
+      @Override
+      public String toString() {
+        Set<Scope> scopes = new HashSet<Scope>(classScopes);
+        scopes.add(urlScope);
+        return scopes.toString();
+      }
+    };
   }
 
   public ScopeBuilder with(Class<?> aClass) {
-    String description = aClass.getName();
-    String classResourceName = qNameToResourceName(description) + ".class";
-    urlScopeBuilder.add(Utils.getEffectiveClassLoader().getResource(classResourceName), description);
+    classScopes.add(new ClassScope(aClass));
     return this;
   }
 
