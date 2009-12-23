@@ -1,15 +1,14 @@
 package geeks.expressive;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
 import org.reflections.adapters.ParallelStrategyHelper;
 import org.picocontainer.injectors.ProviderAdapter;
+import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.lang.reflect.Method;
-
-import junit.framework.AssertionFailedError;
 
 /**
  * A test for {@link ScopeBuilder}.
@@ -21,8 +20,8 @@ public class TestScopeBuilder {
   @Test
   public void shouldSupportEmptyScope() {
     Scope scope = new ScopeBuilder().build();
-    assertEquals(0, scope.getMethodsAnnotatedWith(Test.class).size());
-    assertSame(Scope.EMPTY, scope);
+    assertEquals(scope.getMethodsAnnotatedWith(Test.class).size(), 0);
+    assertSame(scope, Scope.EMPTY);
   }
 
   @Test
@@ -48,7 +47,7 @@ public class TestScopeBuilder {
         return;
       }
     }
-    AssertionFailedError error = new AssertionFailedError(String.format("stack trace element %s.%s not found within ", aClass.getName(), methodName) + throwable);
+    AssertionError error = new AssertionError(String.format("stack trace element %s.%s not found within ", aClass.getName(), methodName) + throwable);
     error.initCause(throwable);
     throw error;
   }
