@@ -1,8 +1,7 @@
 package geeks.expressive;
 
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.DefaultPicoContainer;
-import org.picocontainer.injectors.ConstructorInjection;
+import org.picocontainer.PicoBuilder;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class DefaultObjectFactory implements ObjectFactory {
   private final Map<Class<?>, Object> addedComponents = new HashMap<Class<?>, Object>();
 
   public DefaultObjectFactory() {
-    this(new DefaultPicoContainer(new ConstructorInjection()));
+    this(new PicoBuilder().withConstructorInjection().build());
   }
 
   public DefaultObjectFactory(MutablePicoContainer container) {
