@@ -1,13 +1,14 @@
 package geeks.expressive;
 
 /**
- * An Object factory for getting components instances.  This could be implemented using Spring, PicoContainer, etc. 
+ * An Object factory for getting components instances.  This could be implemented using Spring, PicoContainer, etc.
+ * <p/>Components are expected to be classes rather than interfaces at all. 
  *
  * @author pabstec
  */
 public interface ObjectFactory {
   /**
-   * Gets an instanceo of a component.
+   * Gets an instance of a component.
    * @param componentClass the class of the Component.
    * @param <T> the type of the component
    * @return the instance
