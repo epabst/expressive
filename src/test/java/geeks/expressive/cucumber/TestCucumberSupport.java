@@ -22,10 +22,9 @@ public class TestCucumberSupport {
     ResultPublisher resultPublisher = new ResultPublisher(stringWriter);
     JCucumber cucumber = new JCucumber(resultPublisher);
     cucumber.run(getClass().getResource("features/Addition.feature"), Scopes.asScope(CalculatorSteps.class.getPackage()));
-    System.out.println(stringWriter.toString());
-    assertEquals(resultPublisher.getTestCount(), 3);
-    assertEquals(resultPublisher.getFailedCount(), 1);
     String output = stringWriter.toString();
+    assertEquals(resultPublisher.getTestCount(), 3, output);
+    assertEquals(resultPublisher.getFailedCount(), 1, output);
     assertSubstring(output, "Feature: Addition Using the Calculator");
     assertSubstring(output, "Scenario: 1+1");
     assertSubstring(output, "Then the result should be \"3\"");
