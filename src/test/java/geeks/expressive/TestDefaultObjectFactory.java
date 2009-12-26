@@ -3,6 +3,9 @@ package geeks.expressive;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 import org.picocontainer.PicoCompositionException;
+import org.picocontainer.injectors.AbstractInjector;
+
+import java.io.Serializable;
 
 /**
  * A test for {@link DefaultObjectFactory}.
@@ -22,35 +25,37 @@ public class TestDefaultObjectFactory {
   @Test
   public void shouldSupportRegisteredComponentInterface() {
     DefaultObjectFactory objectFactory = new DefaultObjectFactory();
-    objectFactory.addInstance(new Component2());
+    objectFactory.addInstance(ComponentInterface.class, new Component2());
     ComponentInterface instance1 = objectFactory.getInstance(ComponentInterface.class);
     assertEquals(instance1.getClass(), Component2.class);
+
+    assertNull(objectFactory.getInstance(Serializable.class),
+            "shouldn't be able to get the component by a different interface than it was registered with");
   }
 
   @Test
   public void shouldFailWithComponentInterfaceRegisteredMultipleTimes() {
     DefaultObjectFactory objectFactory = new DefaultObjectFactory();
-    objectFactory.addInstance(new Component2());
-    objectFactory.addInstance(new Component3());
+    objectFactory.addInstance(ComponentInterface.class, new Component2());
     try {
-      objectFactory.getInstance(ComponentInterface.class);
+      objectFactory.addInstance(ComponentInterface.class, new Component3());
       fail("expected exception");
     }
     catch (PicoCompositionException e) {
-      assertTrue(e.getMessage().contains("Duplicate"));
-      assertTrue(e.getMessage().contains(ComponentInterface.class.getName()));
+      assertTrue(e.getMessage().contains("Duplicate"), e.toString());
+      assertTrue(e.getMessage().contains(ComponentInterface.class.getName()), e.toString());
     }
   }
 
   @Test
-  public void shouldNotAllowAddingComponentClass() {
+  public void shouldNotAllowNullComponentClass() {
     DefaultObjectFactory objectFactory = new DefaultObjectFactory();
     try {
-      objectFactory.addInstance(Component1.class);
+      objectFactory.addInstance(null, new Component2());
       fail("expected exception");
     }
-    catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("class"), e.toString());
+    catch (NullPointerException e) {
+      assertTrue(e.getMessage().contains("componentKey"), e.toString());
     }
   }
 
@@ -70,6 +75,6 @@ public class TestDefaultObjectFactory {
   public static class Component2 implements ComponentInterface {
   }
 
-  public static class Component3 implements ComponentInterface {
+  public static class Component3 implements ComponentInterface, Serializable {
   }
 }

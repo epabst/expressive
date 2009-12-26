@@ -16,35 +16,9 @@ import java.lang.reflect.Modifier;
  */
 public class DefaultObjectFactory implements ObjectFactory {
   private final MutablePicoContainer container;
-  private final Set<Class<?>> registeredComponentClasses = new HashSet<Class<?>>();
-  private final Set<Object> addedInstances = new HashSet<Object>();
 
   public DefaultObjectFactory() {
-    this.container = new PicoBuilder().withCaching().withConstructorInjection().withMonitor(new ComposingMonitor(new ComposingMonitor.Composer() {
-      @Override
-      public Object compose(PicoContainer picoContainer, Object o) {
-        if (o instanceof Class) {
-          Class<?> componentClass = (Class<?>) o;
-          if (registeredComponentClasses.add(componentClass)) {
-            if (Modifier.isAbstract(componentClass.getModifiers())) {
-              for (Object addedInstance : addedInstances) {
-                if (componentClass.isInstance(addedInstance)) {
-                  //auto-register the matching instance since it hasn't been registered yet
-                  container.addComponent(componentClass, addedInstance);
-                }
-              }
-              return getInstance(componentClass);
-            }
-            else {
-              //auto-register the class since it hasn't been registered yet
-              container.addComponent(componentClass);
-              return getInstance(componentClass);
-            }
-          }
-        }
-        return null;
-      }
-    })).build();
+    this.container = new PicoBuilder().withCaching().withConstructorInjection().withMonitor(new ComposingMonitor(new AutoRegisterConcreteClassesComposer())).build();
   }
 
   public DefaultObjectFactory(MutablePicoContainer container) {
@@ -55,11 +29,27 @@ public class DefaultObjectFactory implements ObjectFactory {
     return container.getComponent(componentClass);
   }
 
-  public void addInstance(Object instance) {
-    if (instance instanceof Class) {
-      throw new IllegalArgumentException("a class is not a component instance: " + instance);
+  public <T> void addInstance(Class<T> componentClass, T instance) {
+    container.addComponent(componentClass, instance);
+  }
+
+  public static class AutoRegisterConcreteClassesComposer implements ComposingMonitor.Composer {
+    private final Set<Class<?>> registeredComponentClasses = new HashSet<Class<?>>();
+
+    @Override
+    public Object compose(PicoContainer picoContainer, Object o) {
+      if (o instanceof Class) {
+        Class<?> componentClass = (Class<?>) o;
+        if (!Modifier.isAbstract(componentClass.getModifiers())) {
+          //prevent an infinite loop by only registering each componentClass once
+          if (registeredComponentClasses.add(componentClass)) {
+            //auto-register the class since it hasn't been registered yet
+            ((MutablePicoContainer) picoContainer).addComponent(componentClass);
+            return picoContainer.getComponent(componentClass);
+          }
+        }
+      }
+      return null;
     }
-    addedInstances.add(instance);
-    container.addComponent(instance);
   }
 }

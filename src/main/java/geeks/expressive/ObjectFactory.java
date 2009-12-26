@@ -17,7 +17,8 @@ public interface ObjectFactory {
 
   /**
    * Adds a specific instance of a component to prevent automatically constructing one.
+   * @param componentClass the componentClass for use later with {@link #getInstance(Class)}
    * @param instance the instance
    */
-  void addInstance(Object instance);
+  <T> void addInstance(Class<T> componentClass, T instance);
 }

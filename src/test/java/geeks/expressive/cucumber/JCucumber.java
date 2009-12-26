@@ -28,7 +28,7 @@ public class JCucumber {
     BufferedReader reader = new BufferedReader(new InputStreamReader(featureResource.openStream(), "UTF-8"));
     Parser parser = new Parser(resultPublisher, stepsScope);
     ObjectFactory objectFactory = new DefaultObjectFactory();
-    objectFactory.addInstance(parser);
+    objectFactory.addInstance(Parser.class, parser);
     new Expressive(objectFactory).execute(reader, COMMAND_ASSOCIATION, Parser.TRANSFORM_ASSOCIATION,
             Scopes.asScope(Parser.class));
     parser.finished();
