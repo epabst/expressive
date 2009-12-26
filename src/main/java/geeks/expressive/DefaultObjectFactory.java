@@ -27,6 +27,10 @@ public class DefaultObjectFactory implements ObjectFactory {
     })).build();
   }
 
+  public DefaultObjectFactory(MutablePicoContainer container) {
+    this.container = container;
+  }
+
   public <T> T getInstance(Class<T> componentClass) {
     return container.getComponent(componentClass);
   }
