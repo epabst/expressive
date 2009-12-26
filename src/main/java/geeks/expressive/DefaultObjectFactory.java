@@ -2,6 +2,8 @@ package geeks.expressive;
 
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
+import org.picocontainer.PicoContainer;
+import org.picocontainer.monitors.ComposingMonitor;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -16,11 +18,15 @@ public class DefaultObjectFactory implements ObjectFactory {
   private final Map<Class<?>, Object> addedComponents = new HashMap<Class<?>, Object>();
 
   public DefaultObjectFactory() {
-    this(new PicoBuilder().withConstructorInjection().build());
-  }
-
-  public DefaultObjectFactory(MutablePicoContainer container) {
-    this.container = container;
+    this.container = new PicoBuilder().withConstructorInjection().withMonitor(new ComposingMonitor(new ComposingMonitor.Composer() {
+      @Override
+      public Object compose(PicoContainer picoContainer, Object o) {
+        if (o instanceof Class) {
+          return getInstance((Class<?>) o);
+        }
+        return null;
+      }
+    })).build();
   }
 
   public <T> T getInstance(Class<T> componentClass) {
