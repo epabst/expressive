@@ -2,11 +2,16 @@ package geeks.expressive;
 
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
+
+import static org.easymock.classextension.EasyMock.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -129,6 +134,18 @@ public class TestExpressive {
             new AnnotationMethodRegexAssociation(TransformForTesting.class), Scopes.asScope(Talker.class));
     Talker talker = expressive.addAndGetComponent(Talker.class);
     assertEquals(talker.getResult(), "hi");
+  }
+
+  @Test
+  public void shouldCloseReader() throws IOException {
+    Reader reader = createMock(Reader.class);
+    expect(reader.read((char[]) anyObject(), anyInt(), anyInt())).andReturn(-1).times(0, 1);
+    reader.close();
+    expectLastCall().once();
+    replay(reader);
+
+    expressive.execute(new BufferedReader(reader), MethodRegexAssociation.NONE, MethodRegexAssociation.NONE, Scope.EMPTY);
+    verify(reader);
   }
 
   public static class Talker {

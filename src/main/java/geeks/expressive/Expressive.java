@@ -31,6 +31,7 @@ public class Expressive {
     while ((string = reader.readLine()) != null) {
       execute(string, regexAssociation, transformRegexAssociation, scope);
     }
+    reader.close();
   }
 
   public Object execute(String languageString, MethodRegexAssociation regexAssociation, MethodRegexAssociation transformRegexAssociation, Scope scope) {
@@ -177,10 +178,6 @@ public class Expressive {
 
     public NaturalLanguageMethod getNaturalLanguageMethod() {
       return naturalLanguageMethod;
-    }
-
-    public Matcher getMatcher() {
-      return matcher;
     }
 
     Object invokeMethod(Object objectToInvoke) {
